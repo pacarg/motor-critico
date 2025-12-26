@@ -4,49 +4,69 @@ import json
 import os
 import pypdf
 
-# Configuración básica
-st.set_page_config(page_title="Motor Crítico", layout="wide", page_icon="🛡️")
+# ==========================================
+# 1. CONFIGURACIÓN BÁSICA
+# ==========================================
 
-# Estilos CSS
+st.set_page_config(
+    page_title="Motor Crítico", 
+    layout="wide", 
+    page_icon="🛡️"
+)
+
+# Estilos CSS para hacer el número del termómetro grande y visible
 st.markdown("""
 <style>
     div[data-testid="stMetricValue"] { font-size: 30px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-# API KEY
+# ==========================================
+# 2. CONEXIÓN Y SEGURIDAD
+# ==========================================
+
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=API_KEY)
 except:
-    st.error("⚠️ ERROR: No se detectó la API KEY en los Secrets.")
+    st.error("⚠️ ERROR CRÍTICO: No se detectó la API KEY en los Secrets.")
     st.stop()
 
-# Lectura de PDFs
+# ==========================================
+# 3. CEREBRO (LECTURA DE PDFs)
+# ==========================================
+
 @st.cache_resource
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
     texto_total = ""
     archivos_leidos = []
+    
     if not os.path.exists(carpeta):
         return "ADVERTENCIA: Carpeta 'datos' no encontrada.", []
-    
+
     archivos = [f for f in os.listdir(carpeta) if f.endswith('.pdf')]
+    
     for archivo in archivos:
         try:
             ruta_pdf = os.path.join(carpeta, archivo)
             reader = pypdf.PdfReader(ruta_pdf)
             for page in reader.pages:
                 texto_total += page.extract_text() + "\n"
+            
             texto_total += f"\n--- FIN DOCUMENTO: {archivo} ---\n"
             archivos_leidos.append(archivo)
-        except:
+        except Exception as e:
             pass 
+
     return texto_total, archivos_leidos
 
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
-# --- CONFIGURACIÓN GANADORA ---
-# Usamos el nombre que sabemos que funciona en tu servidor:
+# ==========================================
+# 4. CONFIGURACIÓN DEL MODELO IA
+# ==========================================
+
+# Nombre del modelo que confirmó funcionamiento en tu servidor
 MODEL_NAME = "models/gemini-flash-latest"
 
 SYSTEM_INSTRUCTION = f"""
@@ -57,10 +77,10 @@ Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 {{
   "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural)",
   "Nivel_Alarmismo": (Número entero 0-100),
-  "Punto_de_Dolor": "Texto breve...",
-  "Riesgo_Real": "Texto breve...",
-  "Desarticulacion": "Texto breve...",
-  "Cita": "Cita textual breve...",
+  "Punto_de_Dolor": "Texto breve identificando la emoción...",
+  "Riesgo_Real": "Texto breve explicando el problema técnico real...",
+  "Desarticulacion": "Texto breve con el argumento lógico...",
+  "Cita": "Cita textual breve de los documentos...",
   "Autor_Cita": "Nombre del archivo fuente"
 }}
 
@@ -71,7 +91,7 @@ CONTEXTO DOCUMENTAL:
 generation_config = {
     "temperature": 0.5,
     "max_output_tokens": 8192,
-    "response_mime_type": "application/json", # Forzamos respuesta limpia
+    "response_mime_type": "application/json", # Modo JSON activado para evitar errores
 }
 
 model = genai.GenerativeModel(
@@ -80,22 +100,45 @@ model = genai.GenerativeModel(
     system_instruction=SYSTEM_INSTRUCTION
 )
 
-# Interfaz
+# ==========================================
+# 5. INTERFAZ VISUAL (FRONTEND)
+# ==========================================
+
+# --- BARRA LATERAL CON LOGO ---
 with st.sidebar:
-    st.title("🎛️ Panel de Control")
-    if len(LISTA_ARCHIVOS) > 0:
-        st.success(f"✅ **Sistema Online**\nConectado a {len(LISTA_ARCHIVOS)} fuentes.")
-    else:
-        st.error("⚠️ Sin documentos.")
+    # 1. INTENTO DE CARGAR LOGO
+    try:
+        st.image("logo.png", use_column_width=True)
+    except:
+        # Si no encuentra el logo, no pasa nada, solo avisa discretamente
+        st.info("💡 Sube una imagen llamada 'logo.png' a GitHub para personalizar este espacio.")
+    
     st.markdown("---")
-    modo = st.radio("Modo:", ["✍️ Escribir crítica", "📂 Casos predefinidos"])
+    
+    st.title("🎛️ Panel de Control")
+    
+    # 2. MONITOR DE ESTADO
+    if len(LISTA_ARCHIVOS) > 0:
+        st.success(f"✅ **Sistema Online**\nConectado a {len(LISTA_ARCHIVOS)} fuentes internas.")
+    else:
+        st.error("⚠️ Sin documentos en carpeta 'datos'.")
+    
+    st.markdown("---")
+    
+    # 3. SELECTOR DE MODO
+    modo = st.radio("Modo de Operación:", ["✍️ Escribir crítica", "📂 Casos Estratégicos"])
+    
+    st.markdown("---")
+    st.caption("ℹ️ El **Nivel de Alarmismo** mide la distancia semántica entre la narrativa emocional del usuario y la realidad técnica de los documentos.")
 
+# --- CUERPO PRINCIPAL ---
 st.title("🛡️ Motor Crítico")
+st.caption("Herramienta forense de análisis de narrativas tecnológicas - Guía Tecnológico")
 
+# Lógica de entrada de datos (RECUPERAMOS LA LISTA BUENA)
 if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Argumento a analizar:", height=100)
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=100)
 else:
-    # RECUPERAMOS LA LISTA ESTRATÉGICA COMPLETA
     input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
         "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
         "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
@@ -104,40 +147,73 @@ else:
         "Si un coche autónomo atropella a alguien por error, la culpa es del algoritmo, no de las personas.",
         "Nos estamos convirtiendo en simples datos para alimentar a la máquina y perdiendo nuestra esencia biológica."
     ])
-if st.button("🔍 EJECUTAR ANÁLISIS", type="primary"):
+
+# --- BOTÓN DE EJECUCIÓN ---
+if st.button("🔍 EJECUTAR ANÁLISIS FORENSE", type="primary"):
     if not input_usuario:
-        st.warning("El campo está vacío.")
+        st.warning("El campo de texto está vacío.")
     else:
-        with st.spinner('Procesando...'):
+        with st.spinner('Analizando patrones lógicos y consultando biblioteca...'):
             try:
+                # 1. Llamada a la IA
                 response = model.generate_content(input_usuario)
                 
-                # Limpieza extra por seguridad
+                # 2. Limpieza y parseo de JSON
                 texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(texto_limpio)
                 
-                # Visualización
+                # 3. Extracción de métricas
                 alarmismo = data.get('Nivel_Alarmismo', 0)
                 
-                st.markdown("### 📊 Diagnóstico")
+                # --- VISUALIZACIÓN DE RESULTADOS ---
+                st.markdown("### 📊 Diagnóstico de Intensidad")
+                
+                # Definición de colores según gravedad
+                if alarmismo < 30:
+                    estado = "🟢 BAJO (Racional)"
+                    bar_color = "green"
+                elif alarmismo < 70:
+                    estado = "🟡 MEDIO (Preocupante)"
+                    bar_color = "orange"
+                else:
+                    estado = "🔴 CRÍTICO (Pánico/Falacia)"
+                    bar_color = "red"
+
+                # Layout del termómetro
                 c1, c2 = st.columns([1, 3])
                 with c1:
-                    st.metric("Alarmismo", f"{alarmismo}%")
+                    st.metric("Nivel de Alarmismo", f"{alarmismo}%")
                 with c2:
+                    st.write(f"**Clasificación:** {estado}")
                     st.progress(alarmismo / 100)
-                    st.caption(f"Perfil: {data.get('Clasificacion')}")
+                    st.caption(f"Perfil detectado: {data.get('Clasificacion')}")
 
                 st.markdown("---")
-                col1, col2, col3 = st.columns(3)
-                col1.error(f"**Dolor:**\n{data.get('Punto_de_Dolor')}")
-                col2.warning(f"**Riesgo:**\n{data.get('Riesgo_Real')}")
-                col3.success(f"**Lógica:**\n{data.get('Desarticulacion')}")
 
-                with st.expander("📚 EVIDENCIA", expanded=True):
+                # Tarjetas de Análisis
+                col_a, col_b, col_c = st.columns(3)
+                
+                with col_a:
+                    st.error("😫 **Punto de Dolor**")
+                    st.write(data.get('Punto_de_Dolor'))
+                
+                with col_b:
+                    st.warning("⚠️ **Riesgo Real**")
+                    st.write(data.get('Riesgo_Real'))
+                    
+                with col_c:
+                    st.success("🧠 **Desarticulación**")
+                    st.write(data.get('Desarticulacion'))
+
+                # Evidencia Documental
+                st.markdown("###")
+                with st.expander("📚 VER EVIDENCIA DOCUMENTAL", expanded=True):
                     st.info(f'"{data.get("Cita")}"')
-                    st.caption(f"📍 Fuente: {data.get('Autor_Cita')}")
+                    st.caption(f"📍 Fuente hallada: **{data.get('Autor_Cita')}**")
 
             except Exception as e:
-                st.error("Error analizando.")
-                st.write(e)
-                if 'response' in locals(): st.write("Respuesta cruda:", response.text)
+                st.error("Error en el análisis.")
+                st.write("Detalle del error técnico:", e)
+                # Si falló el JSON pero hay texto, lo mostramos para depurar
+                if 'response' in locals():
+                    st.write("Respuesta cruda recibida:", response.text)
