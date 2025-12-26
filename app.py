@@ -82,7 +82,7 @@ CONTEXTO (TUS DOCUMENTOS):
 """
 
 model = genai.GenerativeModel(
-    model_name="gemini-pro",
+    model_name="models/gemini-flash-latest",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
