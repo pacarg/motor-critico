@@ -5,7 +5,7 @@ import os
 import pypdf
 
 # ==========================================
-# 1. CONFIGURACIÓN BÁSICA
+# 1. CONFIGURACIÓN BÁSICA Y ESTÉTICA
 # ==========================================
 
 st.set_page_config(
@@ -14,7 +14,7 @@ st.set_page_config(
     page_icon="🛡️"
 )
 
-# Estilos CSS para hacer el número del termómetro grande y visible
+# Estilos CSS para mejorar la visualización de métricas
 st.markdown("""
 <style>
     div[data-testid="stMetricValue"] { font-size: 30px; font-weight: bold; }
@@ -66,7 +66,7 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 4. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# Nombre del modelo que confirmó funcionamiento en tu servidor
+# Usamos el nombre del modelo que confirmó funcionamiento en tu servidor
 MODEL_NAME = "models/gemini-flash-latest"
 
 SYSTEM_INSTRUCTION = f"""
@@ -91,7 +91,7 @@ CONTEXTO DOCUMENTAL:
 generation_config = {
     "temperature": 0.5,
     "max_output_tokens": 8192,
-    "response_mime_type": "application/json", # Modo JSON activado para evitar errores
+    "response_mime_type": "application/json", # Modo JSON activado para estabilidad
 }
 
 model = genai.GenerativeModel(
@@ -104,20 +104,19 @@ model = genai.GenerativeModel(
 # 5. INTERFAZ VISUAL (FRONTEND)
 # ==========================================
 
-# --- BARRA LATERAL CON LOGO ---
+# --- BARRA LATERAL ---
 with st.sidebar:
-    # 1. INTENTO DE CARGAR LOGO
+    # Intento de cargar Logo
     try:
         st.image("logo.png", use_column_width=True)
     except:
-        # Si no encuentra el logo, no pasa nada, solo avisa discretamente
-        st.info("💡 Sube una imagen llamada 'logo.png' a GitHub para personalizar este espacio.")
+        st.info("💡 Sube una imagen llamada 'logo.png' a GitHub para ver tu marca aquí.")
     
     st.markdown("---")
     
     st.title("🎛️ Panel de Control")
     
-    # 2. MONITOR DE ESTADO
+    # Monitor de Estado
     if len(LISTA_ARCHIVOS) > 0:
         st.success(f"✅ **Sistema Online**\nConectado a {len(LISTA_ARCHIVOS)} fuentes internas.")
     else:
@@ -125,7 +124,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. SELECTOR DE MODO
+    # Selector de Modo
     modo = st.radio("Modo de Operación:", ["✍️ Escribir crítica", "📂 Casos Estratégicos"])
     
     st.markdown("---")
@@ -135,7 +134,22 @@ with st.sidebar:
 st.title("🛡️ Motor Crítico")
 st.caption("Herramienta forense de análisis de narrativas tecnológicas - Guía Tecnológico")
 
-# Lógica de entrada de datos (RECUPERAMOS LA LISTA BUENA)
+# 1. INTRODUCCIÓN (EL QUÉ ES)
+st.markdown("""
+> Este sistema emplea Inteligencia Artificial para **desarticular narrativas** sobre tecnología. 
+> Analiza argumentos para detectar sesgos, medir niveles de alarmismo y contrastar el discurso popular 
+> contra una base de conocimiento crítica (filosofía, ética y técnica).
+""")
+
+# 2. DISCLAIMER (EL QUÉ NO ES)
+st.info("""
+**⚠️ Aviso importante:** Esta herramienta no pretende ser un oráculo de verdad absoluta ni sustituir el juicio ético humano. 
+No es un validador automático de hechos (*fact-checker*), sino un **asistente para la reflexión** diseñado para enriquecer el debate, no para clausurarlo.
+""")
+
+st.markdown("---")
+
+# Lógica de entrada de datos
 if modo == "✍️ Escribir crítica":
     input_usuario = st.text_area("Introduce el argumento a analizar:", height=100)
 else:
@@ -168,16 +182,13 @@ if st.button("🔍 EJECUTAR ANÁLISIS FORENSE", type="primary"):
                 # --- VISUALIZACIÓN DE RESULTADOS ---
                 st.markdown("### 📊 Diagnóstico de Intensidad")
                 
-                # Definición de colores según gravedad
+                # Definición de colores
                 if alarmismo < 30:
                     estado = "🟢 BAJO (Racional)"
-                    bar_color = "green"
                 elif alarmismo < 70:
                     estado = "🟡 MEDIO (Preocupante)"
-                    bar_color = "orange"
                 else:
                     estado = "🔴 CRÍTICO (Pánico/Falacia)"
-                    bar_color = "red"
 
                 # Layout del termómetro
                 c1, c2 = st.columns([1, 3])
