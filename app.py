@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (UX OPTIMIZADA)
+# 2. ESTILO VISUAL (MODERNO Y LEGIBLE)
 # ==========================================
 
 estilo_css = """
@@ -36,20 +36,17 @@ estilo_css = """
         --texto-general: #f1f5f9;      /* Blanco suave */
     }
 
-    /* APLICACIÓN GLOBAL */
     .stApp {
         background-color: var(--fondo-body);
         color: var(--texto-general);
         font-family: 'Inter', sans-serif;
     }
 
-    /* BARRA LATERAL */
     section[data-testid="stSidebar"] {
         background-color: var(--fondo-sidebar);
         border-right: 1px solid #334155;
     }
     
-    /* TÍTULOS */
     h1, h2, h3 { color: #ffffff !important; font-weight: 700; }
     p, li, label, .stMarkdown { color: #e2e8f0; }
 
@@ -61,7 +58,7 @@ estilo_css = """
         border-radius: 6px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 16px;
-        caret-color: #ef4444; /* Cursor rojo */
+        caret-color: #ef4444;
     }
     .stTextArea textarea:focus {
         border-color: var(--acento);
@@ -99,7 +96,6 @@ estilo_css = """
     div.stButton > button:hover {
         background: linear-gradient(135deg, #38bdf8, #0ea5e9);
         transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(14, 165, 233, 0.5);
     }
 
     /* MÉTRICAS */
@@ -113,7 +109,7 @@ estilo_css = """
         color: #94a3b8 !important;
     }
 
-    /* CORRECCIÓN EXPANDER (VER EVIDENCIA) */
+    /* EXPANDER (VER EVIDENCIA) */
     .streamlit-expanderHeader {
         background-color: #0f172a !important; 
         color: #ffffff !important;             
@@ -128,7 +124,7 @@ estilo_css = """
         color: #e2e8f0;
     }
     
-    /* CITA TEXTUAL (Estilo limpio sin botón copiar) */
+    /* CITA TEXTUAL */
     blockquote {
         border-left: 4px solid #38bdf8;
         padding-left: 15px;
@@ -140,7 +136,6 @@ estilo_css = """
         color: #e2e8f0;
     }
 
-    /* Custom Info Box */
     .info-box {
         background-color: rgba(15, 23, 42, 0.8);
         border-left: 4px solid var(--acento);
@@ -169,8 +164,8 @@ except:
 
 # ==========================================
 # 4. CEREBRO (LECTURA DE PDFs)
+# ¡¡IMPORTANTE!! ESTA SECCIÓN DEBE IR ANTES DE CONFIGURAR LA IA
 # ==========================================
-# IMPORTANTE: Esto debe ir ANTES de configurar la IA
 
 @st.cache_resource
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
@@ -197,14 +192,14 @@ def cargar_biblioteca_desde_pdfs(carpeta="datos"):
 
     return texto_total, archivos_leidos
 
-# Ejecutamos la carga para definir la variable LISTA_ARCHIVOS
+# AQUÍ se define la variable LISTA_ARCHIVOS que causaba el error
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
 # ==========================================
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# Usamos el modelo 2.0 que es estable y potente
+# Usamos Gemini 2.0 Flash para evitar límites de cuota
 MODEL_NAME = "models/gemini-2.0-flash"
 
 PROMPT_BASE = """
@@ -222,6 +217,7 @@ Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 }
 """
 
+# Ahora sí podemos usar LISTA_ARCHIVOS porque ya se definió arriba
 SYSTEM_INSTRUCTION = f"""
 {PROMPT_BASE}
 
@@ -291,7 +287,6 @@ with st.sidebar:
 col_h1, col_h2 = st.columns([1, 10])
 with col_h2:
     st.title("Motor Crítico")
-    # Subtítulo eliminado
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -326,4 +321,75 @@ else:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-col_btn, col_rest = st
+col_btn, col_rest = st.columns([1, 2])
+with col_btn:
+    ejecutar = st.button("🚀 EJECUTAR ANÁLISIS")
+
+if ejecutar:
+    if not input_usuario:
+        st.warning("⚠️ Protocolo detenido. El campo de argumento está vacío.")
+    else:
+        # VISUALIZACIÓN AUTOMÁTICA
+        loader_placeholder = st.empty()
+        
+        with loader_placeholder.container():
+            st.info("🔄 Inicializando protocolos forenses...")
+            time.sleep(0.3)
+            st.write(f"📂 Consultando {len(LISTA_ARCHIVOS)} documentos internos...")
+            time.sleep(0.3)
+            st.write("🧠 Detectando sesgos cognitivos y semánticos...")
+            
+        try:
+            # 1. LLAMADA A LA IA
+            response = model.generate_content(input_usuario)
+            
+            # 2. LIMPIEZA
+            texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
+            data = json.loads(texto_limpio)
+            
+            # 3. MÉTRICAS
+            alarmismo = data.get('Nivel_Alarmismo', 0)
+            
+            # Limpiamos el loader
+            loader_placeholder.empty()
+
+            st.divider()
+
+            # --- REPORTE ---
+            st.markdown("### 📊 Reporte de Análisis")
+            
+            if alarmismo < 30:
+                estado_texto = "BAJO (Racional)"
+            elif alarmismo < 70:
+                estado_texto = "MEDIO (Preocupante)"
+            else:
+                estado_texto = "CRÍTICO (Pánico)"
+
+            col_met1, col_met2, col_met3 = st.columns(3)
+            col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
+            col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
+            col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
+                st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
+            with c2:
+                st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            with st.expander("📚 VER EVIDENCIA DOCUMENTAL (FUENTE ORIGINAL)", expanded=True):
+                st.markdown("**Cita textual hallada:**")
+                st.markdown(f"> {data.get('Cita')}")
+                st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
+
+        except Exception as e:
+            loader_placeholder.empty()
+            st.error("Error técnico durante el procesamiento.")
+            if "429" in str(e):
+                 st.error("⏳ El servidor está saturado temporalmente. Espera un minuto.")
+            else:
+                 st.write(e)
