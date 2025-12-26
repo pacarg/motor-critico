@@ -4,15 +4,8 @@ import json
 import os
 import pypdf
 
-# ==========================================
-# 1. CONFIGURACIÓN
-# ==========================================
-
-st.set_page_config(
-    page_title="Motor Crítico", 
-    layout="wide", 
-    page_icon="🛡️"
-)
+# Configuración básica
+st.set_page_config(page_title="Motor Crítico", layout="wide", page_icon="🛡️")
 
 # Estilos CSS
 st.markdown("""
@@ -29,45 +22,38 @@ except:
     st.error("⚠️ ERROR: No se detectó la API KEY en los Secrets.")
     st.stop()
 
-# ==========================================
-# 2. CEREBRO (LECTURA DE PDFs)
-# ==========================================
-
+# Lectura de PDFs
 @st.cache_resource
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
     texto_total = ""
     archivos_leidos = []
-    
     if not os.path.exists(carpeta):
         return "ADVERTENCIA: Carpeta 'datos' no encontrada.", []
-
-    archivos = [f for f in os.listdir(carpeta) if f.endswith('.pdf')]
     
+    archivos = [f for f in os.listdir(carpeta) if f.endswith('.pdf')]
     for archivo in archivos:
         try:
             ruta_pdf = os.path.join(carpeta, archivo)
             reader = pypdf.PdfReader(ruta_pdf)
             for page in reader.pages:
                 texto_total += page.extract_text() + "\n"
-            
             texto_total += f"\n--- FIN DOCUMENTO: {archivo} ---\n"
             archivos_leidos.append(archivo)
-        except Exception as e:
+        except:
             pass 
-
     return texto_total, archivos_leidos
 
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
-# --- CONFIGURACIÓN DEL MODELO ---
-# Usamos el nombre OFICIAL y ESTÁNDAR para evitar errores de "Not Found"
-MODEL_NAME = "gemini-1.5-flash"
+# --- CONFIGURACIÓN GANADORA ---
+# Usamos el nombre que sabemos que funciona en tu servidor:
+MODEL_NAME = "models/gemini-flash-latest"
 
 SYSTEM_INSTRUCTION = f"""
 Eres el "Motor de Desarticulación Lógica". 
 Tu tarea es analizar argumentos sobre IA basándote en estos documentos: {LISTA_ARCHIVOS}.
 
-Debes responder SIEMPRE con este esquema JSON exacto:
+Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 {{
   "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural)",
   "Nivel_Alarmismo": (Número entero 0-100),
@@ -82,34 +68,19 @@ CONTEXTO DOCUMENTAL:
 {BIBLIOTECA_CONOCIMIENTO}
 """
 
-# Configuración técnica para forzar JSON y reducir bloqueos
 generation_config = {
     "temperature": 0.5,
-    "top_p": 0.95,
-    "top_k": 64,
     "max_output_tokens": 8192,
-    "response_mime_type": "application/json", # <--- ESTO SOLUCIONA EL ERROR JSON PARA SIEMPRE
+    "response_mime_type": "application/json", # Forzamos respuesta limpia
 }
-
-# Configuramos seguridad para que no bloquee palabras como "muerte" o "aniquilar" en contextos académicos
-safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-]
 
 model = genai.GenerativeModel(
     model_name=MODEL_NAME,
     generation_config=generation_config,
-    safety_settings=safety_settings,
     system_instruction=SYSTEM_INSTRUCTION
 )
 
-# ==========================================
-# 3. INTERFAZ VISUAL
-# ==========================================
-
+# Interfaz
 with st.sidebar:
     st.title("🎛️ Panel de Control")
     if len(LISTA_ARCHIVOS) > 0:
@@ -118,22 +89,21 @@ with st.sidebar:
         st.error("⚠️ Sin documentos.")
     st.markdown("---")
     modo = st.radio("Modo:", ["✍️ Escribir crítica", "📂 Casos predefinidos"])
-    st.markdown("---")
-    st.caption("v2.1 - JSON Mode Enabled")
 
 st.title("🛡️ Motor Crítico")
-st.caption("Herramienta forense de análisis de narrativas tecnológicas")
 
 if modo == "✍️ Escribir crítica":
     input_usuario = st.text_area("Argumento a analizar:", height=100)
 else:
-    input_usuario = st.selectbox("Selecciona caso:", [
-        "La IA cobrará conciencia y nos aniquilará a todos.",
-        "La IA es una caja negra opaca y peligrosa.",
-        "Los artistas morirán de hambre por culpa de la IA generativa.",
-        "Mis datos privados son vendidos para controlarme mentalmente."
+    # RECUPERAMOS LA LISTA ESTRATÉGICA COMPLETA
+    input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
+        "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
+        "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
+        "Los robots nos quitarán el trabajo y viviremos en la miseria absoluta.",
+        "Siento que las aplicaciones me escuchan y vigilan para manipular lo que compro y pienso.",
+        "Si un coche autónomo atropella a alguien por error, la culpa es del algoritmo, no de las personas.",
+        "Nos estamos convirtiendo en simples datos para alimentar a la máquina y perdiendo nuestra esencia biológica."
     ])
-
 if st.button("🔍 EJECUTAR ANÁLISIS", type="primary"):
     if not input_usuario:
         st.warning("El campo está vacío.")
@@ -142,51 +112,32 @@ if st.button("🔍 EJECUTAR ANÁLISIS", type="primary"):
             try:
                 response = model.generate_content(input_usuario)
                 
-                # Al forzar JSON, la respuesta ya viene limpia
-                data = json.loads(response.text)
+                # Limpieza extra por seguridad
+                texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
+                data = json.loads(texto_limpio)
                 
-                # --- VISUALIZACIÓN ---
+                # Visualización
                 alarmismo = data.get('Nivel_Alarmismo', 0)
                 
                 st.markdown("### 📊 Diagnóstico")
-                
-                if alarmismo < 30:
-                    estado = "🟢 BAJO"
-                elif alarmismo < 70:
-                    estado = "🟡 MEDIO"
-                else:
-                    estado = "🔴 CRÍTICO"
-
                 c1, c2 = st.columns([1, 3])
                 with c1:
                     st.metric("Alarmismo", f"{alarmismo}%")
                 with c2:
-                    st.write(f"**Nivel:** {estado}")
                     st.progress(alarmismo / 100)
                     st.caption(f"Perfil: {data.get('Clasificacion')}")
 
                 st.markdown("---")
-                
-                col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    st.error("😫 **Punto de Dolor**")
-                    st.write(data.get('Punto_de_Dolor'))
-                with col_b:
-                    st.warning("⚠️ **Riesgo Real**")
-                    st.write(data.get('Riesgo_Real'))
-                with col_c:
-                    st.success("🧠 **Desarticulación**")
-                    st.write(data.get('Desarticulacion'))
+                col1, col2, col3 = st.columns(3)
+                col1.error(f"**Dolor:**\n{data.get('Punto_de_Dolor')}")
+                col2.warning(f"**Riesgo:**\n{data.get('Riesgo_Real')}")
+                col3.success(f"**Lógica:**\n{data.get('Desarticulacion')}")
 
-                st.markdown("###")
-                with st.expander("📚 EVIDENCIA DOCUMENTAL", expanded=True):
+                with st.expander("📚 EVIDENCIA", expanded=True):
                     st.info(f'"{data.get("Cita")}"')
-                    st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
+                    st.caption(f"📍 Fuente: {data.get('Autor_Cita')}")
 
             except Exception as e:
-                st.error("Error en el análisis.")
-                # Mostramos el error técnico para depurar si hace falta
-                st.write(f"Detalle: {e}")
-                # Si hay respuesta pero falló el JSON, la mostramos (debugging)
-                if 'response' in locals():
-                    st.write("Respuesta cruda recibida:", response.text)
+                st.error("Error analizando.")
+                st.write(e)
+                if 'response' in locals(): st.write("Respuesta cruda:", response.text)
