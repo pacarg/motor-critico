@@ -14,12 +14,19 @@ st.set_page_config(
     page_icon="🛡️"
 )
 
+# Estilos CSS para hacer el número del termómetro más grande
+st.markdown("""
+<style>
+    div[data-testid="stMetricValue"] { font-size: 30px; font-weight: bold; }
+</style>
+""", unsafe_allow_html=True)
+
 # Gestión segura de la API Key
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=API_KEY)
 except:
-    st.error("⚠️ ERROR CRÍTICO: No se detectó la API KEY en los Secrets.")
+    st.error("⚠️ ERROR CRÍTICO: No se detectó la API KEY en los Secrets de Streamlit.")
     st.stop()
 
 # ==========================================
@@ -46,24 +53,23 @@ def cargar_biblioteca_desde_pdfs(carpeta="datos"):
             texto_total += f"\n--- FIN DOCUMENTO: {archivo} ---\n"
             archivos_leidos.append(archivo)
         except Exception as e:
-            pass # Ignoramos errores puntuales de lectura
+            pass 
 
     return texto_total, archivos_leidos
 
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
-# --- PROMPT DEL SISTEMA MEJORADO (CON MÉTRICAS) ---
+# --- PROMPT DEL SISTEMA (CON SOLICITUD DE MÉTRICA NUMÉRICA) ---
 SYSTEM_INSTRUCTION = f"""
 ROL: Eres el "Motor de Desarticulación Lógica". 
 TU BASE DE DATOS: {LISTA_ARCHIVOS}.
 
 TAREA: Analiza el argumento del usuario.
-Si la respuesta está en los documentos, úsala. Si no, usa tu criterio ético/técnico.
 
 FORMATO JSON OBLIGATORIO:
 {{
   "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural)",
-  "Nivel_Alarmismo": (Un número entero del 0 al 100 que indique cuánto miedo irracional contiene),
+  "Nivel_Alarmismo": (Un número entero del 0 al 100 que indique cuánto miedo irracional o exageración contiene el texto),
   "Punto_de_Dolor": "Identifica la emoción legítima...",
   "Riesgo_Real": "Identifica el problema técnico real...",
   "Desarticulacion": "Argumento lógico que desmonta la falacia...",
@@ -81,15 +87,8 @@ model = genai.GenerativeModel(
 )
 
 # ==========================================
-# 3. INTERFAZ VISUAL (DASHBOARD)
+# 3. INTERFAZ VISUAL
 # ==========================================
-
-# Estilos CSS para las métricas
-st.markdown("""
-<style>
-    div[data-testid="stMetricValue"] { font-size: 24px; }
-</style>
-""", unsafe_allow_html=True)
 
 # --- BARRA LATERAL ---
 with st.sidebar:
@@ -104,11 +103,11 @@ with st.sidebar:
     modo = st.radio("Modo:", ["✍️ Escribir crítica", "📂 Casos predefinidos"])
     
     st.markdown("---")
-    st.info("💡 **Tip:** El 'Nivel de Alarmismo' es calculado por la IA basándose en el lenguaje emocional del texto.")
+    st.caption("ℹ️ El **Nivel de Alarmismo** mide la distancia entre la narrativa emocional y la realidad técnica.")
 
 # --- CUERPO PRINCIPAL ---
-st.title("🛡️ Motor Crítico de IA")
-st.caption("Herramienta forense para desarticular narrativas tecnológicas.")
+st.title("🛡️ Motor Crítico")
+st.caption("Herramienta forense de análisis de narrativas tecnológicas")
 
 if modo == "✍️ Escribir crítica":
     input_usuario = st.text_area("Introduce el argumento a analizar:", height=100)
@@ -117,41 +116,45 @@ else:
         "La IA cobrará conciencia y nos aniquilará a todos.",
         "La IA es una caja negra opaca y peligrosa.",
         "Los artistas morirán de hambre por culpa de la IA generativa.",
-        "Mis datos privados son vendidos para controlarme mentalmente."
+        "Mis datos privados son vendidos para controlarme mentalmente.",
+        "Si un coche autónomo mata a alguien, nadie es responsable."
     ])
 
 # --- BOTÓN DE ANÁLISIS ---
-if st.button("🔍 EJECUTAR ANÁLISIS FORENSE", type="primary"):
+if st.button("🔍 EJECUTAR ANÁLISIS", type="primary"):
     if not input_usuario:
         st.warning("El campo está vacío.")
     else:
-        with st.spinner('Procesando lógica... Consultando biblioteca...'):
+        with st.spinner('Midiendo niveles de pánico y consultando biblioteca...'):
             try:
+                # Llamada a la IA
                 response = model.generate_content(input_usuario)
                 texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(texto_limpio)
 
-                # --- SECCIÓN 1: EL TERMÓMETRO ---
-                st.markdown("### 📊 Diagnóstico de Intensidad")
-                c1, c2 = st.columns([1, 3])
-                
+                # Recuperamos el valor numérico (si falla, pone 0)
                 alarmismo = data.get('Nivel_Alarmismo', 0)
+
+                # --- SECCIÓN 1: EL TERMÓMETRO VISUAL ---
+                st.markdown("### 📊 Diagnóstico de Intensidad")
+                
+                # Definimos colores y textos según el nivel
+                if alarmismo < 30:
+                    estado = "🟢 BAJO (Argumento Racional)"
+                elif alarmismo < 70:
+                    estado = "🟡 MEDIO (Preocupación Legítima)"
+                else:
+                    estado = "🔴 CRÍTICO (Pánico/Falacia)"
+
+                c1, c2 = st.columns([1, 3])
                 
                 with c1:
                     st.metric("Nivel de Alarmismo", f"{alarmismo}%")
                 
                 with c2:
-                    # Barra de progreso con color dinámico
-                    if alarmismo < 30:
-                        color_barra = "🟢 Riesgo Bajo"
-                        st.progress(alarmismo / 100)
-                    elif alarmismo < 70:
-                        color_barra = "🟡 Riesgo Medio"
-                        st.progress(alarmismo / 100)
-                    else:
-                        color_barra = "🔴 Riesgo Crítico (Pánico)"
-                        st.progress(alarmismo / 100)
-                    st.caption(f"Clasificación: **{color_barra}** | Perfil: **{data.get('Clasificacion')}**")
+                    st.write(f"**Clasificación:** {estado}")
+                    st.progress(alarmismo / 100)
+                    st.caption(f"Perfil detectado: {data.get('Clasificacion')}")
 
                 st.markdown("---")
 
@@ -163,44 +166,19 @@ if st.button("🔍 EJECUTAR ANÁLISIS FORENSE", type="primary"):
                     st.write(data.get('Punto_de_Dolor'))
                 
                 with col_b:
-                    st.warning("⚠️ **Riesgo Real (Técnico)**")
+                    st.warning("⚠️ **Riesgo Real**")
                     st.write(data.get('Riesgo_Real'))
                     
                 with col_c:
-                    st.success("🧠 **Desarticulación Lógica**")
+                    st.success("🧠 **Desarticulación**")
                     st.write(data.get('Desarticulacion'))
 
                 # --- SECCIÓN 3: EVIDENCIA ---
                 st.markdown("###")
                 with st.expander("📚 VER EVIDENCIA DOCUMENTAL", expanded=True):
-                    st.markdown(f"> *\"{data.get('Cita')}\"*")
-                    st.caption(f"📍 Fuente detectada: **{data.get('Autor_Cita')}**")
-
-                # --- SECCIÓN 4: EXPORTAR ---
-                informe_texto = f"""INFORME FORENSE - MOTOR CRÍTICO
---------------------------------
-ARGUMENTO ANALIZADO: {input_usuario}
-FECHA: {json.dumps(data.get('Clasificacion'))}
-NIVEL DE ALARMISMO: {alarmismo}%
-
-1. PUNTO DE DOLOR:
-{data.get('Punto_de_Dolor')}
-
-2. RIESGO TÉCNICO REAL:
-{data.get('Riesgo_Real')}
-
-3. DESARTICULACIÓN LÓGICA:
-{data.get('Desarticulacion')}
-
-FUENTE CITADA: {data.get('Autor_Cita')}
-"""
-                st.download_button(
-                    label="⬇️ Descargar Informe (TXT)",
-                    data=informe_texto,
-                    file_name="informe_forense.txt",
-                    mime="text/plain"
-                )
+                    st.info(f'"{data.get("Cita")}"')
+                    st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
 
             except Exception as e:
-                st.error("Error en el análisis. Inténtalo de nuevo.")
+                st.error("Hubo un error interpretando la respuesta. Inténtalo de nuevo.")
                 st.write(e)
