@@ -17,53 +17,66 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (CSS BLINDADO)
+# 2. ESTILO VISUAL (CONTRASTE OPTIMIZADO)
 # ==========================================
 
-# Definimos el CSS en una variable separada para evitar errores de sintaxis
 estilo_css = """
 <style>
     /* IMPORTAR FUENTES */
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
 
-    /* --- PALETA DE COLORES --- */
+    /* --- PALETA DE COLORES INTELIGENTE --- */
     :root {
-        --fondo-principal: #0f172a;      /* Azul noche muy oscuro */
-        --fondo-secundario: #1e293b;     /* Azul grisáceo */
-        --texto-principal: #f8fafc;      /* Blanco casi puro */
-        --texto-secundario: #94a3b8;     /* Gris claro */
-        --acento-primario: #38bdf8;      /* Azul cielo brillante */
-        --borde: #334155;                /* Borde sutil */
+        /* 1. BARRA LATERAL (Oscura - Panel de Control) */
+        --fondo-sidebar: #020617;      /* Casi negro */
+        
+        /* 2. CUERPO PRINCIPAL (Tecnológico Intermedio - Gunmetal) */
+        --fondo-body: #1e293b;         /* Slate 800: Un azul grisáceo profesional */
+        
+        /* 3. INPUTS Y CAJAS (Claros - Alto Contraste) */
+        --fondo-input: #f1f5f9;        /* Slate 100: Gris platino muy claro */
+        --texto-input: #0f172a;        /* Slate 900: Texto oscuro para leer bien */
+        
+        /* 4. ACENTOS */
+        --acento: #38bdf8;             /* Cyan brillante */
+        --texto-general: #f8fafc;      /* Blanco para el fondo oscuro */
     }
 
-    /* FONDO GENERAL */
+    /* APLICACIÓN GLOBAL */
     .stApp {
-        background-color: var(--fondo-principal);
-        color: var(--texto-principal);
+        background-color: var(--fondo-body);
+        color: var(--texto-general);
         font-family: 'Inter', sans-serif;
     }
 
     /* BARRA LATERAL */
     section[data-testid="stSidebar"] {
-        background-color: #020617;
-        border-right: 1px solid var(--borde);
+        background-color: var(--fondo-sidebar);
+        border-right: 1px solid #334155;
     }
     
-    /* TÍTULOS Y TEXTOS */
+    /* TÍTULOS */
     h1, h2, h3 { color: #ffffff !important; font-weight: 700; }
-    p, li, label { color: #e2e8f0 !important; font-size: 1rem; }
+    p, li, label { color: #e2e8f0 !important; }
 
-    /* INPUTS DE TEXTO */
+    /* --- EL CAMBIO CLAVE: INPUTS CLAROS --- */
     .stTextArea textarea {
-        background-color: var(--fondo-secundario);
-        color: #ffffff;
-        border: 1px solid var(--borde);
+        background-color: var(--fondo-input) !important;
+        color: var(--texto-input) !important; /* Texto oscuro sobre fondo claro */
+        border: 2px solid #94a3b8;
+        border-radius: 8px;
         font-family: 'JetBrains Mono', monospace;
-        font-size: 15px;
+        font-size: 16px;
+        caret-color: #ef4444; /* CURSOR ROJO PARA QUE SE VEA BIEN */
     }
     .stTextArea textarea:focus {
-        border-color: var(--acento-primario);
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        border-color: var(--acento);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+    /* El título pequeñito encima del input */
+    .stTextArea label {
+        color: #94a3b8 !important;
+        font-weight: bold;
     }
 
     /* BOTÓN EJECUTAR */
@@ -74,34 +87,39 @@ estilo_css = """
         padding: 0.6rem 1rem;
         font-family: 'Inter', sans-serif;
         font-weight: bold;
-        letter-spacing: 0.5px;
         text-transform: uppercase;
         width: 100%;
         border-radius: 6px;
+        border: 1px solid #7dd3fc;
     }
     div.stButton > button:hover {
         background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.5);
     }
 
-    /* MÉTRICAS */
+    /* MÉTRICAS (Números grandes) */
     div[data-testid="stMetricValue"] {
         font-size: 2.2rem !important;
         font-family: 'JetBrains Mono', monospace;
-        color: var(--acento-primario) !important;
+        color: var(--acento) !important;
         text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
     }
-    div[data-testid="stMetricLabel"] { color: var(--texto-secundario) !important; }
     
-    /* CAJAS DE ALERTA */
+    /* CAJAS DE INFORMACIÓN (Avisos, Alertas) */
+    div[data-testid="stAlert"] {
+        background-color: #0f172a; /* Fondo oscuro para las alertas */
+        color: #e2e8f0;
+        border: 1px solid #334155;
+    }
+    
+    /* Custom Info Box */
     .info-box {
-        background-color: rgba(14, 165, 233, 0.1);
-        border-left: 4px solid var(--acento-primario);
+        background-color: rgba(15, 23, 42, 0.6);
+        border-left: 4px solid var(--acento);
         padding: 15px;
         border-radius: 4px;
         margin-bottom: 20px;
-        color: var(--texto-principal);
     }
     
     #MainMenu {visibility: hidden;}
@@ -173,7 +191,6 @@ Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 }
 """
 
-# Usamos f-string simple aquí, separada del resto para evitar confusión
 SYSTEM_INSTRUCTION = f"""
 {PROMPT_BASE}
 
@@ -197,11 +214,10 @@ model = genai.GenerativeModel(
 )
 
 # ==========================================
-# 6. INTERFAZ VISUAL (ESTRUCTURA SEGURA)
+# 6. INTERFAZ VISUAL
 # ==========================================
 
 with st.sidebar:
-    
     # 1. LOGO
     if os.path.exists("logo.png"):
         st.image("logo.png", use_column_width=True)
@@ -211,13 +227,14 @@ with st.sidebar:
     
     st.markdown("### 🎛️ Panel de Control")
     
-    # 2. WIDGET LED (Definido en variable primero)
+    # 2. WIDGET LED
     num_fuentes = len(LISTA_ARCHIVOS)
     color_led = "#4ade80" if num_fuentes > 0 else "#f87171"
     texto_estado = "SISTEMA ONLINE" if num_fuentes > 0 else "OFFLINE"
     
+    # HTML seguro
     html_widget = f"""
-    <div style='background-color: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px;'>
+    <div style='background-color: #020617; padding: 15px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 20px;'>
         <div style='display: flex; align-items: center; justify-content: space-between;'>
             <span style='color: #94a3b8; font-size: 0.75rem; font-weight: bold; letter-spacing: 1px;'>ESTADO DE RED</span>
             <div style='display: flex; align-items: center; gap: 8px;'>
@@ -241,104 +258,4 @@ with st.sidebar:
 
 # --- CUERPO PRINCIPAL ---
 
-col_h1, col_h2 = st.columns([1, 10])
-with col_h2:
-    st.title("Motor Crítico")
-    st.markdown("**Herramienta forense de análisis de narrativas tecnológicas**")
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-st.markdown("""
-Este sistema emplea Inteligencia Artificial para **desarticular narrativas** sobre tecnología. 
-Analiza argumentos para detectar sesgos y contrastar el discurso popular contra una base de conocimiento crítica.
-""")
-
-# Aviso importante definido como variable primero
-html_aviso = """
-<div class="info-box">
-    <strong>⚠️ Aviso importante:</strong> Esta herramienta no pretende ser un oráculo de verdad absoluta ni sustituir el juicio ético humano. 
-    No es un validador automático de hechos (<i>fact-checker</i>), sino un <strong>asistente para la reflexión</strong>.
-</div>
-"""
-st.markdown(html_aviso, unsafe_allow_html=True)
-
-st.markdown("---")
-
-if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
-else:
-    input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
-        "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
-        "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
-        "Los robots nos quitarán el trabajo y viviremos en la miseria absoluta.",
-        "Siento que las aplicaciones me escuchan y vigilan para manipular lo que compro y pienso.",
-        "Si un coche autónomo atropella a alguien por error, la culpa es del algoritmo, no de las personas.",
-        "Nos estamos convirtiendo en simples datos para alimentar a la máquina y perdiendo nuestra esencia biológica."
-    ])
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-col_btn, col_rest = st.columns([1, 2])
-with col_btn:
-    ejecutar = st.button("🚀 EJECUTAR ANÁLISIS")
-
-if ejecutar:
-    if not input_usuario:
-        st.warning("⚠️ Protocolo detenido. El campo de argumento está vacío.")
-    else:
-        with st.status("🔄 Procesando análisis forense...", expanded=True) as status:
-            time.sleep(0.5)
-            st.write(f"📂 Consultando {len(LISTA_ARCHIVOS)} documentos internos...")
-            time.sleep(0.5)
-            st.write("🧠 Detectando sesgos cognitivos...")
-            
-            try:
-                # 1. LLAMADA A LA IA
-                response = model.generate_content(input_usuario)
-                
-                # 2. LIMPIEZA
-                texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
-                data = json.loads(texto_limpio)
-                
-                # 3. MÉTRICAS
-                alarmismo = data.get('Nivel_Alarmismo', 0)
-                
-                status.update(label="✅ Análisis Completado", state="complete", expanded=False)
-
-                st.divider()
-
-                # --- REPORTE ---
-                st.markdown("### 📊 Reporte de Análisis")
-                
-                if alarmismo < 30:
-                    estado_texto = "BAJO (Racional)"
-                elif alarmismo < 70:
-                    estado_texto = "MEDIO (Preocupante)"
-                else:
-                    estado_texto = "CRÍTICO (Pánico)"
-
-                col_met1, col_met2, col_met3 = st.columns(3)
-                col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
-                col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
-                col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
-
-                st.markdown("<br>", unsafe_allow_html=True)
-
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
-                    st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
-                with c2:
-                    st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                with st.expander("📚 VER EVIDENCIA DOCUMENTAL (FUENTE ORIGINAL)", expanded=True):
-                    # Usamos st.write para evitar errores de sintaxis en strings complejos
-                    st.markdown("**Cita textual hallada:**")
-                    st.info(f'"{data.get("Cita")}"')
-                    st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
-
-            except Exception as e:
-                status.update(label="❌ Error en el análisis", state="error")
-                st.error("Error técnico durante el procesamiento.")
-                st.code(e)
+col_h1, col_h2 = st.columns([1,
