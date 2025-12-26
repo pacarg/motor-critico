@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (CONTRASTE OPTIMIZADO)
+# 2. ESTILO VISUAL (CORRECCIONES UX)
 # ==========================================
 
 estilo_css = """
@@ -27,20 +27,13 @@ estilo_css = """
 
     /* --- PALETA DE COLORES --- */
     :root {
-        /* 1. BARRA LATERAL (Oscura - Panel de Control) */
         --fondo-sidebar: #020617;      /* Negro azulado profundo */
-        
-        /* 2. CUERPO PRINCIPAL (Tecnológico - Gunmetal) */
-        --fondo-body: #1e293b;         /* Azul grisáceo técnico (no tan oscuro) */
-        
-        /* 3. INPUTS (Claros - Alto Contraste para escribir) */
+        --fondo-body: #1e293b;         /* Azul grisáceo técnico */
         --fondo-input: #f8fafc;        /* Blanco casi puro */
-        --texto-input: #0f172a;        /* Texto oscuro (casi negro) para máxima legibilidad */
-        --borde-input: #94a3b8;        /* Borde gris visible */
-        
-        /* 4. ACENTOS */
+        --texto-input: #0f172a;        /* Texto oscuro */
+        --borde-input: #94a3b8;        /* Borde gris */
         --acento: #38bdf8;             /* Cyan brillante */
-        --texto-general: #f1f5f9;      /* Blanco suave para el fondo oscuro */
+        --texto-general: #f1f5f9;      /* Blanco suave */
     }
 
     /* APLICACIÓN GLOBAL */
@@ -58,11 +51,9 @@ estilo_css = """
     
     /* TÍTULOS */
     h1, h2, h3 { color: #ffffff !important; font-weight: 700; }
-    
-    /* TEXTO GENERAL */
     p, li, label, .stMarkdown { color: #e2e8f0; }
 
-    /* --- INPUTS Y CAJAS DE TEXTO (TU REQUERIMIENTO CLAVE) --- */
+    /* INPUTS Y CAJAS DE TEXTO */
     .stTextArea textarea {
         background-color: var(--fondo-input) !important;
         color: var(--texto-input) !important;
@@ -70,19 +61,18 @@ estilo_css = """
         border-radius: 6px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 16px;
-        caret-color: #ef4444; /* CURSOR ROJO BRILLANTE */
+        caret-color: #ef4444; /* Cursor rojo */
     }
     .stTextArea textarea:focus {
         border-color: var(--acento);
         box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
     }
-    /* El label pequeño encima del input */
     .stTextArea label {
         color: #cbd5e1 !important;
         font-weight: 600;
     }
     
-    /* SELECTBOX (Desplegable) */
+    /* SELECTBOX */
     div[data-baseweb="select"] > div {
         background-color: var(--fondo-input) !important;
         color: var(--texto-input) !important;
@@ -123,13 +113,34 @@ estilo_css = """
         color: #94a3b8 !important;
     }
 
-    /* CAJAS DE INFORMACIÓN (Avisos) */
-    div[data-testid="stAlert"] {
-        background-color: #0f172a; 
-        color: #e2e8f0;
+    /* CORRECCIÓN EXPANDER (VER EVIDENCIA) */
+    .streamlit-expanderHeader {
+        background-color: #0f172a !important; /* Fondo oscuro para el header */
+        color: #ffffff !important;             /* Texto BLANCO forzado */
         border: 1px solid #334155;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    /* Contenido del expander (La cita) */
+    div[data-testid="stExpanderDetails"] {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-top: none;
+        color: #e2e8f0;
     }
     
+    /* CITA TEXTUAL (Blockquote style) */
+    blockquote {
+        border-left: 4px solid #38bdf8;
+        padding-left: 15px;
+        margin-left: 0;
+        background-color: rgba(56, 189, 248, 0.1);
+        padding: 10px;
+        border-radius: 0 4px 4px 0;
+        font-style: italic;
+        color: #e2e8f0;
+    }
+
     /* Custom Info Box */
     .info-box {
         background-color: rgba(15, 23, 42, 0.8);
@@ -275,12 +286,10 @@ with st.sidebar:
 
 # --- CUERPO PRINCIPAL ---
 
-# AQUÍ ESTABA EL ERROR: Me he asegurado de cerrar los corchetes y paréntesis.
 col_h1, col_h2 = st.columns([1, 10])
-
 with col_h2:
     st.title("Motor Crítico")
-    st.markdown("**Herramienta forense de análisis de narrativas tecnológicas**")
+    # 1) ELIMINADO: La segunda línea de texto ("Herramienta forense...") ya no está aquí.
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -323,58 +332,67 @@ if ejecutar:
     if not input_usuario:
         st.warning("⚠️ Protocolo detenido. El campo de argumento está vacío.")
     else:
-        with st.status("🔄 Procesando análisis forense...", expanded=True) as status:
-            time.sleep(0.5)
+        # 2) VISUALIZACIÓN AUTOMÁTICA
+        # Usamos un placeholder para mostrar los pasos y luego BORRARLOS para mostrar el resultado limpio.
+        loader_placeholder = st.empty()
+        
+        with loader_placeholder.container():
+            st.info("🔄 Inicializando protocolos forenses...")
+            time.sleep(0.3)
             st.write(f"📂 Consultando {len(LISTA_ARCHIVOS)} documentos internos...")
-            time.sleep(0.5)
-            st.write("🧠 Detectando sesgos cognitivos...")
+            time.sleep(0.3)
+            st.write("🧠 Detectando sesgos cognitivos y semánticos...")
             
-            try:
-                # 1. LLAMADA A LA IA
-                response = model.generate_content(input_usuario)
-                
-                # 2. LIMPIEZA
-                texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
-                data = json.loads(texto_limpio)
-                
-                # 3. MÉTRICAS
-                alarmismo = data.get('Nivel_Alarmismo', 0)
-                
-                status.update(label="✅ Análisis Completado", state="complete", expanded=False)
+        try:
+            # 1. LLAMADA A LA IA
+            response = model.generate_content(input_usuario)
+            
+            # 2. LIMPIEZA
+            texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
+            data = json.loads(texto_limpio)
+            
+            # 3. MÉTRICAS
+            alarmismo = data.get('Nivel_Alarmismo', 0)
+            
+            # Limpiamos el loader para que el resultado aparezca AUTOMÁTICAMENTE sin cajas de estado
+            loader_placeholder.empty()
 
-                st.divider()
+            st.divider()
 
-                # --- REPORTE ---
-                st.markdown("### 📊 Reporte de Análisis")
-                
-                if alarmismo < 30:
-                    estado_texto = "BAJO (Racional)"
-                elif alarmismo < 70:
-                    estado_texto = "MEDIO (Preocupante)"
-                else:
-                    estado_texto = "CRÍTICO (Pánico)"
+            # --- REPORTE ---
+            st.markdown("### 📊 Reporte de Análisis")
+            
+            if alarmismo < 30:
+                estado_texto = "BAJO (Racional)"
+            elif alarmismo < 70:
+                estado_texto = "MEDIO (Preocupante)"
+            else:
+                estado_texto = "CRÍTICO (Pánico)"
 
-                col_met1, col_met2, col_met3 = st.columns(3)
-                col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
-                col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
-                col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
+            col_met1, col_met2, col_met3 = st.columns(3)
+            col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
+            col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
+            col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
 
-                st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
-                c1, c2 = st.columns(2)
-                with c1:
-                    st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
-                    st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
-                with c2:
-                    st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
+                st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
+            with c2:
+                st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
 
-                st.markdown("<br>", unsafe_allow_html=True)
-                with st.expander("📚 VER EVIDENCIA DOCUMENTAL (FUENTE ORIGINAL)", expanded=True):
-                    st.markdown("**Cita textual hallada:**")
-                    st.code(f"{data.get('Cita')}", language="text") 
-                    st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # 3 y 4) EVIDENCIA LEGIBLE Y SIN BOTÓN COPIAR
+            with st.expander("📚 VER EVIDENCIA DOCUMENTAL (FUENTE ORIGINAL)", expanded=True):
+                st.markdown("**Cita textual hallada:**")
+                # Usamos blockquote (markdown >) en lugar de st.code para evitar el botón de copiar
+                st.markdown(f"> {data.get('Cita')}")
+                st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
 
-            except Exception as e:
-                status.update(label="❌ Error en el análisis", state="error")
-                st.error("Error técnico durante el procesamiento.")
-                st.code(e)
+        except Exception as e:
+            loader_placeholder.empty() # Limpiar loader si hay error también
+            st.error("Error técnico durante el procesamiento.")
+            st.code(e)
