@@ -6,7 +6,7 @@ import pypdf
 import time
 
 # ==========================================
-# 1. CONFIGURACIÓN DE PÁGINA Y ESTILO TECH
+# 1. CONFIGURACIÓN DE PÁGINA
 # ==========================================
 
 st.set_page_config(
@@ -16,82 +16,118 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- INYECCIÓN DE CSS ESTILO "FORENSE/CYBER" ---
+# ==========================================
+# 2. ESTILO VISUAL "HIGH CONTRAST TECH"
+# ==========================================
+# Hemos ajustado los colores para máxima legibilidad (Blanco sobre Azul Noche)
+
 st.markdown("""
 <style>
-    /* IMPORTAR FUENTES TÉCNICAS */
+    /* IMPORTAR FUENTES */
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
 
-    /* FONDO Y TEXTO GENERAL */
+    /* --- PALETA DE COLORES --- */
+    :root {
+        --fondo-principal: #0f172a;      /* Azul noche muy oscuro (Slate 900) */
+        --fondo-secundario: #1e293b;     /* Azul grisáceo (Slate 800) */
+        --texto-principal: #f8fafc;      /* Blanco casi puro */
+        --texto-secundario: #94a3b8;     /* Gris claro para subtítulos */
+        --acento-primario: #38bdf8;      /* Azul cielo brillante (Cyan) */
+        --borde: #334155;                /* Borde sutil */
+    }
+
+    /* FONDO GENERAL */
     .stApp {
-        background-color: #0E1117;
-        color: #Cdd6f4;
+        background-color: var(--fondo-principal);
+        color: var(--texto-principal);
         font-family: 'Inter', sans-serif;
     }
 
     /* BARRA LATERAL */
     section[data-testid="stSidebar"] {
-        background-color: #161b22;
-        border-right: 1px solid #30363d;
+        background-color: #020617; /* Casi negro */
+        border-right: 1px solid var(--borde);
+    }
+    
+    /* TÍTULOS */
+    h1, h2, h3 {
+        color: #ffffff !important;
+        font-weight: 700;
+    }
+    
+    p, li, label {
+        color: #e2e8f0 !important; /* Texto muy legible */
+        font-size: 1rem;
     }
 
-    /* INPUTS DE TEXTO */
+    /* INPUTS DE TEXTO (ÁREA DE ESCRITURA) */
     .stTextArea textarea {
-        background-color: #0d1117;
-        color: #e6edf3;
-        border: 1px solid #30363d;
+        background-color: var(--fondo-secundario);
+        color: #ffffff;
+        border: 1px solid var(--borde);
         font-family: 'JetBrains Mono', monospace;
+        font-size: 15px; /* Letra un poco más grande */
     }
     .stTextArea textarea:focus {
-        border-color: #58a6ff;
-        box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+        border-color: var(--acento-primario);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
     }
 
-    /* BOTÓN EJECUTAR */
+    /* BOTÓN EJECUTAR (MÁS BRILLANTE) */
     div.stButton > button {
-        background: linear-gradient(90deg, #1f6feb, #1c4587);
+        background: linear-gradient(135deg, #0ea5e9, #0284c7); /* Azul brillante */
         color: white;
         border: none;
         padding: 0.6rem 1rem;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Inter', sans-serif;
         font-weight: bold;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
         transition: all 0.3s ease;
         width: 100%;
-        border: 1px solid #1f6feb;
+        border-radius: 6px;
     }
     div.stButton > button:hover {
-        background: linear-gradient(90deg, #3b8df5, #2659a3);
-        box-shadow: 0 0 15px rgba(31, 111, 235, 0.5);
+        background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
         transform: translateY(-2px);
     }
 
-    /* MÉTRICAS Y TEXTOS */
+    /* MÉTRICAS (Números grandes) */
     div[data-testid="stMetricValue"] {
-        font-size: 2rem !important;
+        font-size: 2.2rem !important;
         font-family: 'JetBrains Mono', monospace;
-        color: #58a6ff !important;
+        color: var(--acento-primario) !important;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    div[data-testid="stMetricLabel"] {
+        color: var(--texto-secundario) !important;
     }
     
-    /* AVISO IMPORTANTE */
+    /* CAJAS DE ALERTA PERSONALIZADAS */
     .info-box {
-        background-color: rgba(56, 139, 253, 0.1);
-        border-left: 3px solid #388bfd;
+        background-color: rgba(14, 165, 233, 0.1);
+        border-left: 4px solid var(--acento-primario);
         padding: 15px;
         border-radius: 4px;
         margin-bottom: 20px;
-        font-size: 0.9rem;
-        color: #c9d1d9;
+        color: var(--texto-principal);
     }
     
+    /* EXPANDER (ACORDEÓN) */
+    .streamlit-expanderHeader {
+        background-color: var(--fondo-secundario);
+        color: var(--texto-principal) !important;
+        border-radius: 4px;
+    }
+
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. CONEXIÓN Y SEGURIDAD
+# 3. CONEXIÓN Y SEGURIDAD
 # ==========================================
 
 try:
@@ -102,7 +138,7 @@ except:
     st.stop()
 
 # ==========================================
-# 3. CEREBRO (LECTURA DE PDFs)
+# 4. CEREBRO (LECTURA DE PDFs)
 # ==========================================
 
 @st.cache_resource
@@ -110,10 +146,9 @@ def cargar_biblioteca_desde_pdfs(carpeta="datos"):
     texto_total = ""
     archivos_leidos = []
     
-    # Crear carpeta si no existe para evitar error
     if not os.path.exists(carpeta):
         os.makedirs(carpeta)
-        return "ADVERTENCIA: Carpeta 'datos' creada (está vacía).", []
+        return "ADVERTENCIA: Carpeta 'datos' creada (vacía).", []
 
     archivos = [f for f in os.listdir(carpeta) if f.endswith('.pdf')]
     
@@ -134,12 +169,11 @@ def cargar_biblioteca_desde_pdfs(carpeta="datos"):
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
 # ==========================================
-# 4. CONFIGURACIÓN DEL MODELO IA (CORREGIDO)
+# 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
 MODEL_NAME = "models/gemini-flash-latest"
 
-# 1. Definimos la instrucción base SIN usar f-string (para evitar conflicto con las llaves {})
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
 Tu tarea es analizar argumentos sobre IA basándote exclusivamente en la documentacion provista.
@@ -155,7 +189,6 @@ Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 }
 """
 
-# 2. Ahora sí usamos f-string para inyectar los datos variables
 SYSTEM_INSTRUCTION = f"""
 {PROMPT_BASE}
 
@@ -179,156 +212,26 @@ model = genai.GenerativeModel(
 )
 
 # ==========================================
-# 5. INTERFAZ VISUAL (FRONTEND TECH)
+# 6. INTERFAZ VISUAL (FRONTEND CORREGIDO)
 # ==========================================
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    st.markdown("## 🛡️ Guía Tecnológico")
-    st.caption("Herramienta Forense v2.0")
-    st.markdown("---")
+    
+    # 1. RECUPERACIÓN DEL LOGO
+    # Buscamos logo.png. Si no está, mostramos un emoji grande.
+    if os.path.exists("logo.png"):
+        st.image("logo.png", use_column_width=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+    else:
+        st.markdown("# 🛡️") # Placeholder si no encuentra la imagen
     
     st.markdown("### 🎛️ Panel de Control")
     
-    # Widget LED de Estado
+    # Widget LED de Estado (Mejorado visualmente)
     num_fuentes = len(LISTA_ARCHIVOS)
-    color_led = "#3fb950" if num_fuentes > 0 else "#da3633"
-    texto_estado = "ONLINE" if num_fuentes > 0 else "OFFLINE"
+    color_led = "#4ade80" if num_fuentes > 0 else "#f87171" # Verde o Rojo pastel
+    texto_estado = "SISTEMA ONLINE" if num_fuentes > 0 else "OFFLINE"
     
     st.markdown(f"""
-    <div style='background-color: #0d1117; padding: 15px; border-radius: 6px; border: 1px solid #30363d; margin-bottom: 20px;'>
-        <div style='display: flex; align-items: center; justify-content: space-between;'>
-            <span style='color: #8b949e; font-size: 0.8rem; font-family: monospace;'>ESTADO</span>
-            <div style='display: flex; align-items: center; gap: 8px;'>
-                <div style='width: 8px; height: 8px; background-color: {color_led}; border-radius: 50%; box-shadow: 0 0 8px {color_led};'></div>
-                <span style='color: {color_led}; font-weight: bold; font-family: monospace; font-size: 0.8rem;'>{texto_estado}</span>
-            </div>
-        </div>
-        <div style='margin-top: 10px; border-top: 1px solid #21262d; padding-top: 8px;'>
-            <span style='color: #e6edf3; font-size: 0.8rem; font-weight: 600;'>Conexión:</span><br>
-            <span style='color: #8b949e; font-size: 0.75rem; font-family: monospace;'>{num_fuentes} Nodos Documentales</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    modo = st.radio("Modo de Operación:", ["✍️ Escribir crítica", "📂 Casos Estratégicos"])
-    
-    st.markdown("---")
-    st.info("ℹ️ El **Nivel de Alarmismo** mide la distancia semántica entre la narrativa emocional y la realidad técnica.")
-
-# --- CUERPO PRINCIPAL ---
-col_h1, col_h2 = st.columns([1, 10])
-with col_h1:
-    st.markdown("# 🛡️")
-with col_h2:
-    st.markdown("# Motor Crítico")
-    st.markdown("<div style='margin-top: -15px; color: #8b949e;'>Herramienta forense de análisis de narrativas tecnológicas</div>", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-st.markdown("""
-Este sistema emplea Inteligencia Artificial para **desarticular narrativas** sobre tecnología. 
-Analiza argumentos para detectar sesgos y contrastar el discurso popular contra una base de conocimiento crítica.
-""")
-
-st.markdown("""
-<div class="info-box">
-    <strong>⚠️ Aviso importante:</strong> Esta herramienta no pretende ser un oráculo de verdad absoluta ni sustituir el juicio ético humano. 
-    No es un validador automático de hechos (<i>fact-checker</i>), sino un <strong>asistente para la reflexión</strong>.
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("---")
-
-# Lógica de Entrada
-if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
-else:
-    input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
-        "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
-        "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
-        "Los robots nos quitarán el trabajo y viviremos en la miseria absoluta.",
-        "Siento que las aplicaciones me escuchan y vigilan para manipular lo que compro y pienso.",
-        "Si un coche autónomo atropella a alguien por error, la culpa es del algoritmo, no de las personas.",
-        "Nos estamos convirtiendo en simples datos para alimentar a la máquina y perdiendo nuestra esencia biológica."
-    ])
-
-# Botón de Ejecución
-col_btn, col_rest = st.columns([1, 2])
-with col_btn:
-    ejecutar = st.button("🔴 EJECUTAR ANÁLISIS FORENSE")
-
-if ejecutar:
-    if not input_usuario:
-        st.warning("⚠️ Protocolo detenido. El campo de argumento está vacío.")
-    else:
-        # Animación de carga High-Tech
-        with st.status("🔄 Inicializando protocolos forenses...", expanded=True) as status:
-            time.sleep(0.5)
-            st.write(f"📂 Accediendo a {len(LISTA_ARCHIVOS)} fuentes internas...")
-            time.sleep(0.5)
-            st.write("🧠 Vectorizando argumento del usuario...")
-            
-            try:
-                # 1. LLAMADA A LA IA
-                response = model.generate_content(input_usuario)
-                
-                # 2. LIMPIEZA Y PARSEO
-                texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
-                data = json.loads(texto_limpio)
-                
-                # 3. EXTRACCIÓN DE MÉTRICAS
-                alarmismo = data.get('Nivel_Alarmismo', 0)
-                
-                status.update(label="✅ Análisis Completado", state="complete", expanded=False)
-
-                # --- REPORTE DE RESULTADOS ---
-                st.markdown("### 📊 Reporte de Análisis")
-                
-                if alarmismo < 30:
-                    estado_texto = "BAJO (Racional)"
-                    delta_color = "normal" 
-                elif alarmismo < 70:
-                    estado_texto = "MEDIO (Preocupante)"
-                    delta_color = "off"
-                else:
-                    estado_texto = "CRÍTICO (Pánico/Falacia)"
-                    delta_color = "inverse"
-
-                # Tarjetas de Métricas
-                col_met1, col_met2, col_met3 = st.columns(3)
-                col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
-                col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
-                col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
-
-                st.markdown("---")
-
-                # Grid de Detalles
-                c1, c2, c3 = st.columns(3)
-                
-                with c1:
-                    st.markdown("#### 😫 Punto de Dolor")
-                    st.info(data.get('Punto_de_Dolor'))
-                
-                with c2:
-                    st.markdown("#### ⚠️ Riesgo Real")
-                    st.warning(data.get('Riesgo_Real'))
-                    
-                with c3:
-                    st.markdown("#### 🧠 Desarticulación")
-                    st.success(data.get('Desarticulacion'))
-
-                # Evidencia Documental
-                st.markdown("<br>", unsafe_allow_html=True)
-                with st.expander("📂 VER EVIDENCIA DOCUMENTAL (FUENTE INTERNA)", expanded=True):
-                    st.markdown(f"> *\"{data.get('Cita')}\"*")
-                    st.caption(f"📍 Identificado en archivo: **{data.get('Autor_Cita')}**")
-
-            except Exception as e:
-                status.update(label="❌ Error en el análisis", state="error")
-                st.error("Error técnico durante el procesamiento.")
-                st.code(e)
-                # Debugging (opcional)
-                if 'response' in locals():
-                    with st.expander("Ver respuesta cruda (Debug)"):
-                        st.write(response.text)
+    <div style='background-color: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #33415
