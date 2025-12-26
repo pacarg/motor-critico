@@ -2,78 +2,73 @@ import streamlit as st
 import google.generativeai as genai
 import json
 import os
-import pypdf  # Librería para leer tus PDFs
+import pypdf
 
 # ==========================================
-# 1. CONFIGURACIÓN
+# 1. CONFIGURACIÓN Y SECRETOS
 # ==========================================
 
-# En lugar de escribir la clave, le decimos que la busque en la "Caja Fuerte" de la nube
-if "GOOGLE_API_KEY" in st.secrets:
+st.set_page_config(
+    page_title="Motor Crítico v2.0", 
+    layout="wide", 
+    page_icon="🛡️"
+)
+
+# Gestión segura de la API Key
+try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
-else:
-    # Esto es solo por si lo corres en local sin configurar secrets, 
-    # pero para GitHub es mejor que esta parte no tenga tu clave real o uses un archivo secrets.toml local no subido.
-    st.error("Falta la API Key en los secretos.")
+    genai.configure(api_key=API_KEY)
+except:
+    st.error("⚠️ ERROR CRÍTICO: No se detectó la API KEY en los Secrets.")
+    st.stop()
 
-# --- FUNCIÓN: LECTOR AUTOMÁTICO DE DOCUMENTOS ---
+# ==========================================
+# 2. CEREBRO (LECTURA DE PDFs)
+# ==========================================
+
+@st.cache_resource
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
     texto_total = ""
     archivos_leidos = []
     
-    # Verificamos si la carpeta existe
     if not os.path.exists(carpeta):
-        return "ADVERTENCIA: No se encontró la carpeta 'datos'. Crea la carpeta y pon tus PDFs dentro.", []
+        return "ADVERTENCIA: Carpeta 'datos' no encontrada.", []
 
-    # Buscamos archivos en la carpeta
     archivos = [f for f in os.listdir(carpeta) if f.endswith('.pdf')]
     
-    if not archivos:
-        return "ADVERTENCIA: La carpeta 'datos' está vacía. Añade PDFs.", []
-
-    # Leemos cada PDF
     for archivo in archivos:
         try:
             ruta_pdf = os.path.join(carpeta, archivo)
             reader = pypdf.PdfReader(ruta_pdf)
-            texto_pdf = ""
             for page in reader.pages:
-                texto_pdf += page.extract_text() + "\n"
+                texto_total += page.extract_text() + "\n"
             
-            # Añadimos etiqueta para que la IA sepa qué documento es
-            texto_total += f"\n--- INICIO DOCUMENTO: {archivo} ---\n"
-            texto_total += texto_pdf
             texto_total += f"\n--- FIN DOCUMENTO: {archivo} ---\n"
             archivos_leidos.append(archivo)
         except Exception as e:
-            st.error(f"Error leyendo {archivo}: {e}")
+            pass # Ignoramos errores puntuales de lectura
 
     return texto_total, archivos_leidos
 
-# --- CARGA INICIAL (Solo se ejecuta una vez al arrancar) ---
-# Usamos cache de Streamlit para no releer los PDFs en cada clic
-@st.cache_resource
-def obtener_conocimiento():
-    return cargar_biblioteca_desde_pdfs()
+BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
-BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = obtener_conocimiento()
-
-# --- INSTRUCCIONES DEL CEREBRO ---
+# --- PROMPT DEL SISTEMA MEJORADO (CON MÉTRICAS) ---
 SYSTEM_INSTRUCTION = f"""
 ROL: Eres el "Motor de Desarticulación Lógica". 
-TU BASE DE DATOS: Tienes acceso al contenido completo de los siguientes documentos internos: {LISTA_ARCHIVOS}.
+TU BASE DE DATOS: {LISTA_ARCHIVOS}.
 
-TAREA: Analiza el argumento del usuario basándote PRIORITARIAMENTE en la información de tus documentos.
-Si la respuesta está en los documentos, úsala. Si no, usa tu criterio general pero avísalo.
+TAREA: Analiza el argumento del usuario.
+Si la respuesta está en los documentos, úsala. Si no, usa tu criterio ético/técnico.
 
 FORMATO JSON OBLIGATORIO:
 {{
   "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural)",
-  "Punto de Dolor": "Identifica la emoción...",
-  "Riesgo Real": "Identifica el problema técnico según los textos...",
-  "Narrativa Exagerada": "Desmonta la falacia...",
-  "Cita": "Cita textual extraída de los documentos proporcionados...",
-  "Autor_Cita": "Nombre del documento o autor (ej: Evaluacion_Grok.pdf)"
+  "Nivel_Alarmismo": (Un número entero del 0 al 100 que indique cuánto miedo irracional contiene),
+  "Punto_de_Dolor": "Identifica la emoción legítima...",
+  "Riesgo_Real": "Identifica el problema técnico real...",
+  "Desarticulacion": "Argumento lógico que desmonta la falacia...",
+  "Cita": "Cita textual breve extraída de los documentos...",
+  "Autor_Cita": "Nombre del documento fuente"
 }}
 
 CONTEXTO (TUS DOCUMENTOS):
@@ -81,87 +76,131 @@ CONTEXTO (TUS DOCUMENTOS):
 """
 
 model = genai.GenerativeModel(
-    model_name="models/gemini-flash-latest",
+    model_name="models/gemini-1.5-flash",
     system_instruction=SYSTEM_INSTRUCTION
 )
 
 # ==========================================
-# 2. INTERFAZ VISUAL
+# 3. INTERFAZ VISUAL (DASHBOARD)
 # ==========================================
 
-st.set_page_config(page_title="Motor Crítico", layout="wide", page_icon="🛡️")
-
+# Estilos CSS para las métricas
 st.markdown("""
 <style>
-    .big-font { font-size:20px !important; }
-    .stAlert { padding: 15px; border-radius: 10px; }
+    div[data-testid="stMetricValue"] { font-size: 24px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- BARRA LATERAL (LIMPIA) ---
+# --- BARRA LATERAL ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/2083/2083213.png", width=80)
-    st.title("Panel de Control")
+    st.title("🎛️ Panel de Control")
     
-    # Muestra solo el conteo, sin revelar los nombres de archivo
     if len(LISTA_ARCHIVOS) > 0:
-        st.success(f"✅ **Sistema Online**\nMotor conectado a {len(LISTA_ARCHIVOS)} fuentes académicas internas.")
+        st.success(f"✅ **Sistema Online**\nConectado a {len(LISTA_ARCHIVOS)} fuentes internas.")
     else:
-        st.error("⚠️ No se detectaron documentos.")
+        st.error("⚠️ Sin documentos.")
     
     st.markdown("---")
-    modo = st.radio("Modo de consulta:", ["✍️ Escribir crítica nueva", "📂 Casos predefinidos"])
+    modo = st.radio("Modo:", ["✍️ Escribir crítica", "📂 Casos predefinidos"])
+    
+    st.markdown("---")
+    st.info("💡 **Tip:** El 'Nivel de Alarmismo' es calculado por la IA basándose en el lenguaje emocional del texto.")
 
 # --- CUERPO PRINCIPAL ---
-st.title("🛡️ Motor Crítico")
-st.caption("Herramienta de análisis forense de narrativas sobre IA")
+st.title("🛡️ Motor Crítico de IA")
+st.caption("Herramienta forense para desarticular narrativas tecnológicas.")
 
-if modo == "✍️ Escribir crítica nueva":
-    input_usuario = st.text_area("Argumento:", height=100)
+if modo == "✍️ Escribir crítica":
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=100)
 else:
-    input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
-        # CASO 1: OPACIDAD (Provoca a Carabantes)
-        "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
-        
-        # CASO 2: CREATIVIDAD (Provoca a Benjamin/Heidegger)
-        "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
-        
-        # CASO 3: ECONOMÍA (Provoca análisis de falacia laboral)
-        "Los robots nos quitarán el trabajo y viviremos en la miseria absoluta.",
-        
-        # CASO 4: VIGILANCIA (Provoca a Shoshana Zuboff)
-        "Siento que las aplicaciones me escuchan y vigilan para manipular lo que compro y pienso.",
-        
-        # CASO 5: RESPONSABILIDAD (Provoca a UNESCO)
-        "Si un coche autónomo atropella a alguien por error, la culpa es del algoritmo, no de las personas.",
-        
-        # CASO 6: DESHUMANIZACIÓN (Provoca a Heidegger)
-        "Nos estamos convirtiendo en simples datos para alimentar a la máquina y perdiendo nuestra esencia biológica."
+    input_usuario = st.selectbox("Selecciona caso:", [
+        "La IA cobrará conciencia y nos aniquilará a todos.",
+        "La IA es una caja negra opaca y peligrosa.",
+        "Los artistas morirán de hambre por culpa de la IA generativa.",
+        "Mis datos privados son vendidos para controlarme mentalmente."
     ])
 
-if st.button("🔍 ANALIZAR CON BIBLIOTECA LOCAL", type="primary"):
+# --- BOTÓN DE ANÁLISIS ---
+if st.button("🔍 EJECUTAR ANÁLISIS FORENSE", type="primary"):
     if not input_usuario:
-        st.warning("Escribe algo.")
+        st.warning("El campo está vacío.")
     else:
-        with st.spinner('Leyendo tus PDFs y analizando...'):
+        with st.spinner('Procesando lógica... Consultando biblioteca...'):
             try:
                 response = model.generate_content(input_usuario)
                 texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
                 data = json.loads(texto_limpio)
 
-                st.markdown("---")
-                st.subheader(f"🏷️ {data.get('Clasificacion')}")
+                # --- SECCIÓN 1: EL TERMÓMETRO ---
+                st.markdown("### 📊 Diagnóstico de Intensidad")
+                c1, c2 = st.columns([1, 3])
                 
-                c1, c2, c3 = st.columns(3)
-                with c1: st.error(f"**😫 Dolor**\n\n{data.get('Punto de Dolor')}")
-                with c2: st.warning(f"**⚠️ Riesgo**\n\n{data.get('Riesgo Real')}")
-                with c3: st.success(f"**🧠 Desarticulación**\n\n{data.get('Narrativa Exagerada')}")
+                alarmismo = data.get('Nivel_Alarmismo', 0)
+                
+                with c1:
+                    st.metric("Nivel de Alarmismo", f"{alarmismo}%")
+                
+                with c2:
+                    # Barra de progreso con color dinámico
+                    if alarmismo < 30:
+                        color_barra = "🟢 Riesgo Bajo"
+                        st.progress(alarmismo / 100)
+                    elif alarmismo < 70:
+                        color_barra = "🟡 Riesgo Medio"
+                        st.progress(alarmismo / 100)
+                    else:
+                        color_barra = "🔴 Riesgo Crítico (Pánico)"
+                        st.progress(alarmismo / 100)
+                    st.caption(f"Clasificación: **{color_barra}** | Perfil: **{data.get('Clasificacion')}**")
 
+                st.markdown("---")
+
+                # --- SECCIÓN 2: LAS TARJETAS ---
+                col_a, col_b, col_c = st.columns(3)
+                
+                with col_a:
+                    st.error("😫 **Punto de Dolor**")
+                    st.write(data.get('Punto_de_Dolor'))
+                
+                with col_b:
+                    st.warning("⚠️ **Riesgo Real (Técnico)**")
+                    st.write(data.get('Riesgo_Real'))
+                    
+                with col_c:
+                    st.success("🧠 **Desarticulación Lógica**")
+                    st.write(data.get('Desarticulacion'))
+
+                # --- SECCIÓN 3: EVIDENCIA ---
                 st.markdown("###")
-                with st.expander("📚 CITA DE TUS DOCUMENTOS", expanded=True):
-                    st.info(f'"{data.get("Cita")}"')
-                    st.caption(f"📍 Fuente: **{data.get('Autor_Cita')}**")
+                with st.expander("📚 VER EVIDENCIA DOCUMENTAL", expanded=True):
+                    st.markdown(f"> *\"{data.get('Cita')}\"*")
+                    st.caption(f"📍 Fuente detectada: **{data.get('Autor_Cita')}**")
+
+                # --- SECCIÓN 4: EXPORTAR ---
+                informe_texto = f"""INFORME FORENSE - MOTOR CRÍTICO
+--------------------------------
+ARGUMENTO ANALIZADO: {input_usuario}
+FECHA: {json.dumps(data.get('Clasificacion'))}
+NIVEL DE ALARMISMO: {alarmismo}%
+
+1. PUNTO DE DOLOR:
+{data.get('Punto_de_Dolor')}
+
+2. RIESGO TÉCNICO REAL:
+{data.get('Riesgo_Real')}
+
+3. DESARTICULACIÓN LÓGICA:
+{data.get('Desarticulacion')}
+
+FUENTE CITADA: {data.get('Autor_Cita')}
+"""
+                st.download_button(
+                    label="⬇️ Descargar Informe (TXT)",
+                    data=informe_texto,
+                    file_name="informe_forense.txt",
+                    mime="text/plain"
+                )
 
             except Exception as e:
-                st.error("Error analizando.")
+                st.error("Error en el análisis. Inténtalo de nuevo.")
                 st.write(e)
