@@ -8,8 +8,13 @@ import pypdf  # Librería para leer tus PDFs
 # 1. CONFIGURACIÓN
 # ==========================================
 
-API_KEY = "AIzaSyApjb9SJGMzpFDOoOj4GFDRzIZV_f2aSHU"  # <--- ¡NO OLVIDES TU CLAVE!
-genai.configure(api_key=API_KEY)
+# En lugar de escribir la clave, le decimos que la busque en la "Caja Fuerte" de la nube
+if "GOOGLE_API_KEY" in st.secrets:
+    API_KEY = st.secrets["GOOGLE_API_KEY"]
+else:
+    # Esto es solo por si lo corres en local sin configurar secrets, 
+    # pero para GitHub es mejor que esta parte no tenga tu clave real o uses un archivo secrets.toml local no subido.
+    st.error("Falta la API Key en los secretos.")
 
 # --- FUNCIÓN: LECTOR AUTOMÁTICO DE DOCUMENTOS ---
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
