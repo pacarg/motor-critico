@@ -17,7 +17,57 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (SOLUCIÓN DEFINITIVA EXPANDER)
+# 1.5 SISTEMA DE SEGURIDAD (TOKENS MÚLTIPLES)
+# ==========================================
+# Este bloque verifica si el usuario tiene permiso ANTES de cargar el resto.
+
+def check_password():
+    """Gestiona la interfaz de entrada de tokens."""
+    if "password_correct" not in st.session_state:
+        # Input de texto para el token
+        token_input = st.text_input(
+            "🎟️ Introduce tu Token de Acceso Personal:", 
+            type="password", 
+            key="token_input"
+        )
+        
+        st.caption("🔒 Acceso restringido. Introduce el código proporcionado en Guía Tecnológico.")
+        
+        # Botón para validar
+        if st.button("Validar Acceso"):
+            verify_token(token_input)
+            
+        return False
+    
+    return st.session_state["password_correct"]
+
+def verify_token(token_ingresado):
+    """Verifica si el token está en la lista autorizada de Secrets."""
+    try:
+        # Leemos la cadena completa de tokens desde Secrets
+        raw_tokens = st.secrets["TOKENS_VALIDOS"]
+    except:
+        st.error("⚠️ Error de configuración: No se ha definido 'TOKENS_VALIDOS' en los Secrets.")
+        return
+
+    # Convertimos la cadena "TOKEN1, TOKEN2" en una lista limpia
+    lista_tokens = [t.strip() for t in raw_tokens.split(",")]
+
+    if token_ingresado.strip() in lista_tokens:
+        st.session_state["password_correct"] = True
+        st.success("✅ Acceso Autorizado")
+        time.sleep(1) 
+        st.rerun()    
+    else:
+        st.session_state["password_correct"] = False
+        st.error("⛔ Token no válido o caducado.")
+
+# --- EL FRENO DE MANO ---
+if not check_password():
+    st.stop()
+
+# ==========================================
+# 2. ESTILO VISUAL (TUS MODIFICACIONES)
 # ==========================================
 
 estilo_css = """
@@ -111,35 +161,30 @@ estilo_css = """
 
     /* --- SOLUCIÓN DE CONTRASTE EXPANDER (FUERZA BRUTA) --- */
     
-    /* 1. Atacamos el contenedor 'details' y 'summary' (HTML estándar) */
     div[data-testid="stExpander"] details {
         border-color: var(--acento) !important;
         border-radius: 8px;
         background-color: transparent !important;
     }
 
-    /* 2. El encabezado (summary): Fondo OSCURO y borde CYAN */
     div[data-testid="stExpander"] details > summary {
-        background-color: #020617 !important; /* Fondo Negro Azulado */
-        border: 1px solid #38bdf8 !important; /* Borde Cyan */
-        color: #38bdf8 !important;            /* Texto Cyan por defecto */
+        background-color: #020617 !important;
+        border: 1px solid #38bdf8 !important;
+        color: #38bdf8 !important;
         border-radius: 8px;
     }
 
-    /* 3. Atacamos el texto interno (p) dentro del summary para que SEA CYAN */
     div[data-testid="stExpander"] details > summary p {
         color: #38bdf8 !important;
         font-weight: 700 !important;
         font-size: 1.1rem !important;
     }
 
-    /* 4. Atacamos el icono de la flecha (svg) para que sea CYAN */
     div[data-testid="stExpander"] details > summary svg {
         fill: #38bdf8 !important;
         color: #38bdf8 !important;
     }
 
-    /* 5. Efecto Hover (al pasar el mouse): Texto BLANCO */
     div[data-testid="stExpander"] details > summary:hover {
         background-color: #1e293b !important;
         border-color: #ffffff !important;
@@ -152,7 +197,6 @@ estilo_css = """
         color: #ffffff !important;
     }
     
-    /* 6. El contenido interior del expander */
     div[data-testid="stExpanderDetails"] {
         background-color: #0f172a !important; 
         border: 1px solid #334155;
@@ -171,7 +215,7 @@ estilo_css = """
         padding: 15px;
         border-radius: 4px;
         font-style: italic;
-        color: #ffffff !important; /* Texto BLANCO PURO para máxima lectura */
+        color: #ffffff !important;
         font-size: 1.1rem;
     }
 
@@ -191,7 +235,7 @@ estilo_css = """
 st.markdown(estilo_css, unsafe_allow_html=True)
 
 # ==========================================
-# 3. CONEXIÓN Y SEGURIDAD
+# 3. CONEXIÓN Y SEGURIDAD API
 # ==========================================
 
 try:
@@ -236,7 +280,6 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# Usamos el modelo 2.0 Flash (Cuenta de pago activa)
 MODEL_NAME = "models/gemini-2.0-flash"
 
 PROMPT_BASE = """
@@ -418,7 +461,6 @@ if ejecutar:
             st.markdown("<br>", unsafe_allow_html=True)
             
             # --- SECCIÓN DE EVIDENCIA MEJORADA ---
-            # El header ahora es forzado a tener fondo oscuro y texto claro por CSS
             with st.expander("📚 VER EVIDENCIA DOCUMENTAL Y FUENTE", expanded=True):
                 st.markdown("#### Cita textual hallada:")
                 # Cita con alto contraste
@@ -426,7 +468,7 @@ if ejecutar:
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # --- NUEVA TARJETA DE IDENTIFICACIÓN DE FUENTE ---
+                # --- TARJETA DE IDENTIFICACIÓN DE FUENTE ---
                 autor_cita = data.get('Autor_Cita', 'Desconocido')
                 if autor_cita == "N/A" or autor_cita == "Desconocido":
                     color_borde = "#94a3b8"
@@ -437,7 +479,7 @@ if ejecutar:
                     icono_fuente = "📂"
                     titulo_fuente = "DOCUMENTO FUENTE IDENTIFICADO"
 
-                # HTML Puro para dibujar la caja tipo "Tarjeta de Crédito" o "ID"
+                # HTML Puro para dibujar la caja tipo "Tarjeta de Crédito"
                 st.markdown(f"""
                 <div style='
                     background-color: #020617; 
@@ -485,5 +527,7 @@ if ejecutar:
         except Exception as e:
             loader_placeholder.empty()
             st.error("Error técnico durante el procesamiento.")
-            # Modo depuración simplificado
-            st.code(e)
+            if "429" in str(e):
+                 st.error("⏳ El servidor está saturado temporalmente. Espera un minuto.")
+            else:
+                 st.code(e)
