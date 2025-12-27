@@ -10,14 +10,14 @@ import time
 # ==========================================
 
 st.set_page_config(
-    page_title="Motor Crítico | Forense", 
+    page_title="Análisis Crítico | Forense", 
     layout="wide", 
     page_icon="🛡️",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (CORRECCIÓN CONTRASTE Y FUENTE)
+# 2. ESTILO VISUAL (SOLUCIÓN DEFINITIVA EXPANDER)
 # ==========================================
 
 estilo_css = """
@@ -109,29 +109,57 @@ estilo_css = """
         color: #94a3b8 !important;
     }
 
-    /* --- CORRECCIÓN CRÍTICA DE CONTRASTE EN EXPANDER --- */
-    /* Forzamos el encabezado a ser oscuro con letras cyan */
-    .streamlit-expanderHeader {
-        background-color: #020617 !important;  /* Fondo MUY oscuro */
-        color: #38bdf8 !important;             /* Texto Cyan Brillante */
-        border: 1px solid #38bdf8 !important;  /* Borde fino */
+    /* --- SOLUCIÓN DE CONTRASTE EXPANDER (FUERZA BRUTA) --- */
+    
+    /* 1. Atacamos el contenedor 'details' y 'summary' (HTML estándar) */
+    div[data-testid="stExpander"] details {
+        border-color: var(--acento) !important;
         border-radius: 8px;
-        font-weight: 700;
-        font-size: 1.1rem !important;
-        margin-bottom: 10px;
+        background-color: transparent !important;
     }
-    .streamlit-expanderHeader:hover {
-        color: #ffffff !important;             /* Blanco al pasar el mouse */
+
+    /* 2. El encabezado (summary): Fondo OSCURO y borde CYAN */
+    div[data-testid="stExpander"] details > summary {
+        background-color: #020617 !important; /* Fondo Negro Azulado */
+        border: 1px solid #38bdf8 !important; /* Borde Cyan */
+        color: #38bdf8 !important;            /* Texto Cyan por defecto */
+        border-radius: 8px;
+    }
+
+    /* 3. Atacamos el texto interno (p) dentro del summary para que SEA CYAN */
+    div[data-testid="stExpander"] details > summary p {
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+
+    /* 4. Atacamos el icono de la flecha (svg) para que sea CYAN */
+    div[data-testid="stExpander"] details > summary svg {
+        fill: #38bdf8 !important;
+        color: #38bdf8 !important;
+    }
+
+    /* 5. Efecto Hover (al pasar el mouse): Texto BLANCO */
+    div[data-testid="stExpander"] details > summary:hover {
+        background-color: #1e293b !important;
         border-color: #ffffff !important;
     }
+    div[data-testid="stExpander"] details > summary:hover p {
+        color: #ffffff !important;
+    }
+    div[data-testid="stExpander"] details > summary:hover svg {
+        fill: #ffffff !important;
+        color: #ffffff !important;
+    }
     
-    /* El contenido interior del expander */
+    /* 6. El contenido interior del expander */
     div[data-testid="stExpanderDetails"] {
-        background-color: #0f172a; 
+        background-color: #0f172a !important; 
         border: 1px solid #334155;
-        border-radius: 8px;
+        border-top: none;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
         padding: 20px;
-        margin-top: -5px;
     }
     
     /* CITA TEXTUAL MEJORADA */
@@ -294,7 +322,7 @@ with st.sidebar:
 
 col_h1, col_h2 = st.columns([1, 10])
 with col_h2:
-    st.title("Motor Crítico")
+    st.title("Análisis Crítico")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -316,7 +344,7 @@ st.markdown("---")
 
 # INPUT USUARIO
 if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento... (Fondo claro activo)")
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
 else:
     input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
         "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
