@@ -10,7 +10,7 @@ import time
 # ==========================================
 
 st.set_page_config(
-    page_title="Motor Crítico | Forense", 
+    page_title="Análisis Crítico | Forense", 
     layout="wide", 
     page_icon="🛡️",
     initial_sidebar_state="expanded"
@@ -200,7 +200,7 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # ==========================================
 
 # Usamos Gemini 2.0 Flash para evitar límites de cuota
-MODEL_NAME = "models/gemini-2.0-flash"
+MODEL_NAME = "models/gemini-2.0-flash-exp"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
@@ -388,8 +388,6 @@ if ejecutar:
 
         except Exception as e:
             loader_placeholder.empty()
-            st.error("Error técnico durante el procesamiento.")
-            if "429" in str(e):
-                 st.error("⏳ El servidor está saturado temporalmente. Espera un minuto.")
-            else:
-                 st.write(e)
+            st.error("❌ Error detectado:")
+            # Esto nos mostrará el mensaje EXACTO de Google
+            st.code(e)
