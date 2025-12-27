@@ -198,7 +198,7 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # ==========================================
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
-MODEL_NAME = "models/gemini-2.0-flash"
+MODEL_NAME = "models/gemini-2.0-flash-lite-preview-02-05"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
