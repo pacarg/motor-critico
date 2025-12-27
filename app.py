@@ -8,49 +8,49 @@ import time
 # ==========================================
 # 1. CONFIGURACIÓN DE PÁGINA
 # ==========================================
+
 st.set_page_config(
-    page_title="Análisis Crítico | Forense", 
+    page_title="Motor Crítico | Forense", 
     layout="wide", 
     page_icon="🛡️",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. ESTILO VISUAL (CLEAN & ROBUST)
+# 2. ESTILO VISUAL (CORRECCIÓN CONTRASTE Y FUENTE)
 # ==========================================
+
 estilo_css = """
 <style>
+    /* IMPORTAR FUENTES */
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
 
-    /* Variables de Color */
+    /* --- PALETA DE COLORES --- */
     :root {
-        --fondo-sidebar: #020617;
-        --fondo-body: #1e293b;
-        --fondo-input: #f8fafc;
-        --texto-input: #0f172a;
-        --borde-input: #94a3b8;
-        --acento: #38bdf8;
-        --texto-general: #f1f5f9;
+        --fondo-sidebar: #020617;      /* Negro azulado profundo */
+        --fondo-body: #1e293b;         /* Azul grisáceo técnico */
+        --fondo-input: #f8fafc;        /* Blanco casi puro */
+        --texto-input: #0f172a;        /* Texto oscuro */
+        --borde-input: #94a3b8;        /* Borde gris */
+        --acento: #38bdf8;             /* Cyan brillante */
+        --texto-general: #f1f5f9;      /* Blanco suave */
     }
 
-    /* Aplicar fondo y texto general */
     .stApp {
         background-color: var(--fondo-body);
         color: var(--texto-general);
         font-family: 'Inter', sans-serif;
     }
 
-    /* Sidebar */
     section[data-testid="stSidebar"] {
         background-color: var(--fondo-sidebar);
         border-right: 1px solid #334155;
     }
     
-    /* Encabezados y Texto */
     h1, h2, h3 { color: #ffffff !important; font-weight: 700; }
     p, li, label, .stMarkdown { color: #e2e8f0; }
 
-    /* Inputs (Áreas de texto) */
+    /* INPUTS Y CAJAS DE TEXTO */
     .stTextArea textarea {
         background-color: var(--fondo-input) !important;
         color: var(--texto-input) !important;
@@ -69,7 +69,7 @@ estilo_css = """
         font-weight: 600;
     }
     
-    /* Selectbox (Desplegables) */
+    /* SELECTBOX */
     div[data-baseweb="select"] > div {
         background-color: var(--fondo-input) !important;
         color: var(--texto-input) !important;
@@ -79,7 +79,7 @@ estilo_css = """
         color: var(--texto-input) !important; 
     }
 
-    /* Botón Ejecutar */
+    /* BOTÓN EJECUTAR */
     div.stButton > button {
         background: linear-gradient(135deg, #0ea5e9, #0284c7);
         color: white;
@@ -98,7 +98,7 @@ estilo_css = """
         transform: translateY(-2px);
     }
 
-    /* Métricas */
+    /* MÉTRICAS */
     div[data-testid="stMetricValue"] {
         font-size: 2rem !important;
         font-family: 'JetBrains Mono', monospace;
@@ -109,34 +109,41 @@ estilo_css = """
         color: #94a3b8 !important;
     }
 
-    /* Expander Personalizado (Evidencia) */
+    /* --- CORRECCIÓN CRÍTICA DE CONTRASTE EN EXPANDER --- */
+    /* Forzamos el encabezado a ser oscuro con letras cyan */
     .streamlit-expanderHeader {
-        background-color: #1e293b !important; 
-        color: var(--acento) !important;
-        border: 2px solid var(--acento) !important;
+        background-color: #020617 !important;  /* Fondo MUY oscuro */
+        color: #38bdf8 !important;             /* Texto Cyan Brillante */
+        border: 1px solid #38bdf8 !important;  /* Borde fino */
         border-radius: 8px;
         font-weight: 700;
         font-size: 1.1rem !important;
+        margin-bottom: 10px;
     }
-    div[data-testid="stExpanderDetails"] {
-        background-color: #020617;
-        border: 2px solid var(--acento);
-        border-top: none;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
-        padding: 20px;
+    .streamlit-expanderHeader:hover {
+        color: #ffffff !important;             /* Blanco al pasar el mouse */
+        border-color: #ffffff !important;
     }
     
-    /* Citas */
+    /* El contenido interior del expander */
+    div[data-testid="stExpanderDetails"] {
+        background-color: #0f172a; 
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: -5px;
+    }
+    
+    /* CITA TEXTUAL MEJORADA */
     blockquote {
         border-left: 5px solid var(--acento);
         padding-left: 20px;
         margin-left: 0;
-        background-color: rgba(56, 189, 248, 0.15);
+        background-color: rgba(56, 189, 248, 0.1); 
         padding: 15px;
         border-radius: 4px;
         font-style: italic;
-        color: #ffffff !important;
+        color: #ffffff !important; /* Texto BLANCO PURO para máxima lectura */
         font-size: 1.1rem;
     }
 
@@ -158,6 +165,7 @@ st.markdown(estilo_css, unsafe_allow_html=True)
 # ==========================================
 # 3. CONEXIÓN Y SEGURIDAD
 # ==========================================
+
 try:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=API_KEY)
@@ -168,6 +176,7 @@ except:
 # ==========================================
 # 4. CEREBRO (LECTURA DE PDFs)
 # ==========================================
+
 @st.cache_resource
 def cargar_biblioteca_desde_pdfs(carpeta="datos"):
     texto_total = ""
@@ -198,7 +207,9 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # ==========================================
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
-MODEL_NAME = "models/gemini-2.0-flash-lite-preview-02-05"
+
+# Usamos el modelo 2.0 Flash (Cuenta de pago activa)
+MODEL_NAME = "models/gemini-2.0-flash"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
@@ -280,9 +291,10 @@ with st.sidebar:
     st.info("ℹ️ El **Nivel de Alarmismo** mide la distancia semántica entre la narrativa emocional y la realidad técnica.")
 
 # --- CUERPO PRINCIPAL ---
+
 col_h1, col_h2 = st.columns([1, 10])
 with col_h2:
-    st.title("Análisis Crítico")
+    st.title("Motor Crítico")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -291,6 +303,7 @@ Este sistema emplea Inteligencia Artificial para examinar tus afirmaciones sobre
 Procesa los argumentos para aportar contexto técnico y contrastar las ideas con una base de conocimiento especializada, facilitando una reflexión más profunda.
 """)
 
+# Aviso importante
 html_aviso = """
 <div class="info-box">
     <strong>⚠️ Aviso importante:</strong> Esta herramienta no pretende ser un oráculo de verdad absoluta ni sustituir el juicio ético humano. 
@@ -303,7 +316,7 @@ st.markdown("---")
 
 # INPUT USUARIO
 if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento... (Fondo claro activo)")
 else:
     input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
         "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
@@ -345,6 +358,7 @@ if ejecutar:
             # 3. MÉTRICAS
             alarmismo = data.get('Nivel_Alarmismo', 0)
             
+            # Limpiamos el loader
             loader_placeholder.empty()
 
             st.divider()
@@ -375,31 +389,67 @@ if ejecutar:
 
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- SECCIÓN DE EVIDENCIA (FUENTE ORIGINAL) ---
+            # --- SECCIÓN DE EVIDENCIA MEJORADA ---
+            # El header ahora es forzado a tener fondo oscuro y texto claro por CSS
             with st.expander("📚 VER EVIDENCIA DOCUMENTAL Y FUENTE", expanded=True):
-                st.markdown("### Cita textual hallada:")
-                # Cita de alto contraste
+                st.markdown("#### Cita textual hallada:")
+                # Cita con alto contraste
                 st.markdown(f"<blockquote>{data.get('Cita')}</blockquote>", unsafe_allow_html=True)
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # CAJA DE FUENTE IDENTIFICADA
+                # --- NUEVA TARJETA DE IDENTIFICACIÓN DE FUENTE ---
                 autor_cita = data.get('Autor_Cita', 'Desconocido')
-                
-                # Lógica visual para la fuente
                 if autor_cita == "N/A" or autor_cita == "Desconocido":
-                    color_fuente = "#94a3b8" 
+                    color_borde = "#94a3b8"
                     icono_fuente = "🚫"
+                    titulo_fuente = "FUENTE NO DISPONIBLE"
                 else:
-                    color_fuente = "#ffffff" 
+                    color_borde = "#38bdf8" # Cyan
                     icono_fuente = "📂"
+                    titulo_fuente = "DOCUMENTO FUENTE IDENTIFICADO"
 
+                # HTML Puro para dibujar la caja tipo "Tarjeta de Crédito" o "ID"
                 st.markdown(f"""
-                <div style='background-color: #1e293b; padding: 15px; border-radius: 8px; border: 2px solid {color_led}; display: flex; align-items: center; gap: 15px;'>
-                    <span style='font-size: 1.8rem;'>{icono_fuente}</span>
+                <div style='
+                    background-color: #020617; 
+                    padding: 20px; 
+                    border-radius: 10px; 
+                    border: 2px solid {color_borde}; 
+                    display: flex; 
+                    align-items: center; 
+                    gap: 20px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                '>
+                    <div style='
+                        font-size: 3rem; 
+                        background: rgba(255,255,255,0.05); 
+                        padding: 10px; 
+                        border-radius: 50%;
+                        width: 80px;
+                        height: 80px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    '>
+                        {icono_fuente}
+                    </div>
                     <div>
-                        <div style='color: #38bdf8; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;'>Documento Fuente Identificado</div>
-                        <div style='color: {color_fuente}; font-size: 1.2rem; font-weight: bold; font-family: monospace; margin-top: 5px;'>{autor_cita}</div>
+                        <div style='
+                            color: {color_borde}; 
+                            font-size: 0.8rem; 
+                            font-weight: 800; 
+                            letter-spacing: 2px; 
+                            text-transform: uppercase;
+                            margin-bottom: 5px;
+                        '>{titulo_fuente}</div>
+                        <div style='
+                            color: #ffffff; 
+                            font-size: 1.3rem; 
+                            font-weight: 700; 
+                            font-family: monospace;
+                            word-break: break-all;
+                        '>{autor_cita}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -407,7 +457,5 @@ if ejecutar:
         except Exception as e:
             loader_placeholder.empty()
             st.error("Error técnico durante el procesamiento.")
-            if "429" in str(e):
-                 st.error("⏳ El servidor está saturado temporalmente. Espera un minuto.")
-            else:
-                 st.write(e)
+            # Modo depuración simplificado
+            st.code(e)
