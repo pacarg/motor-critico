@@ -10,7 +10,7 @@ import time
 # ==========================================
 
 st.set_page_config(
-    page_title="Análisis Crítico | Forense", 
+    page_title="Motor Crítico | Forense", 
     layout="wide", 
     page_icon="🛡️",
     initial_sidebar_state="expanded"
@@ -164,7 +164,6 @@ except:
 
 # ==========================================
 # 4. CEREBRO (LECTURA DE PDFs)
-# ¡¡IMPORTANTE!! ESTA SECCIÓN DEBE IR ANTES DE CONFIGURAR LA IA
 # ==========================================
 
 @st.cache_resource
@@ -192,16 +191,13 @@ def cargar_biblioteca_desde_pdfs(carpeta="datos"):
 
     return texto_total, archivos_leidos
 
-# AQUÍ se define la variable LISTA_ARCHIVOS que causaba el error
 BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
 # ==========================================
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# ELEGIDO DE TU LISTA VERDE:
-# Usamos la Serie 2.0 Flash. 
-# Al ser usuario de pago, el bloqueo anterior debería haber desaparecido.
+# Usamos el modelo 2.0 Flash (Cuenta de pago activa)
 MODEL_NAME = "models/gemini-2.0-flash"
 
 PROMPT_BASE = """
@@ -287,13 +283,14 @@ with st.sidebar:
 
 col_h1, col_h2 = st.columns([1, 10])
 with col_h2:
-    st.title("Análisis Crítico")
+    st.title("Motor Crítico")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+# --- AQUI ESTA EL TEXTO ACTUALIZADO Y DEFINITIVO ---
 st.markdown("""
-Este sistema emplea Inteligencia Artificial para **desarticular narrativas** sobre tecnología. 
-Analiza argumentos para detectar sesgos y contrastar el discurso popular contra una base de conocimiento crítica.
+Este sistema emplea Inteligencia Artificial para examinar tus afirmaciones sobre tecnología. 
+Procesa los argumentos para aportar contexto técnico y contrastar las ideas con una base de conocimiento especializada, facilitando una reflexión más profunda.
 """)
 
 # Aviso importante
@@ -309,7 +306,7 @@ st.markdown("---")
 
 # INPUT USUARIO
 if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento... (Fondo claro activo)")
 else:
     input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
         "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
@@ -338,7 +335,7 @@ if ejecutar:
             time.sleep(0.3)
             st.write(f"📂 Consultando {len(LISTA_ARCHIVOS)} documentos internos...")
             time.sleep(0.3)
-            st.write("🧠 Detectando sesgos cognitivos y semánticos...")
+            st.write("🧠 Procesando análisis semántico...")
             
         try:
             # 1. LLAMADA A LA IA
@@ -389,6 +386,8 @@ if ejecutar:
 
         except Exception as e:
             loader_placeholder.empty()
-            st.error("❌ Error detectado:")
-            # Esto nos mostrará el mensaje EXACTO de Google
-            st.code(e)
+            st.error("Error técnico durante el procesamiento.")
+            if "429" in str(e):
+                 st.error("⏳ El servidor está saturado temporalmente. Espera un minuto.")
+            else:
+                 st.write(e)
