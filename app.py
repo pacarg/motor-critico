@@ -199,8 +199,11 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# Usamos Gemini 2.0 Flash para evitar límites de cuota
-MODEL_NAME = "models/gemini-exp-1206"
+# CORRECCIÓN CRÍTICA:
+# Usamos la versión "Lite" explícita.
+# Evitamos 'latest' (que te lleva al 2.5 con solo 20 req/día)
+# Evitamos 'exp' (que tiene cuota 0 en free tier)
+MODEL_NAME = "models/gemini-2.0-flash-lite-preview-02-05"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
@@ -217,7 +220,6 @@ Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 }
 """
 
-# Ahora sí podemos usar LISTA_ARCHIVOS porque ya se definió arriba
 SYSTEM_INSTRUCTION = f"""
 {PROMPT_BASE}
 
@@ -239,7 +241,6 @@ model = genai.GenerativeModel(
     generation_config=generation_config,
     system_instruction=SYSTEM_INSTRUCTION
 )
-
 # ==========================================
 # 6. INTERFAZ VISUAL
 # ==========================================
