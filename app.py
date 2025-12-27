@@ -19,7 +19,6 @@ st.set_page_config(
 # ==========================================
 # 1.5 SISTEMA DE SEGURIDAD (TOKENS MÚLTIPLES)
 # ==========================================
-# Este bloque verifica si el usuario tiene permiso ANTES de cargar el resto.
 
 def check_password():
     """Gestiona la interfaz de entrada de tokens."""
@@ -67,7 +66,7 @@ if not check_password():
     st.stop()
 
 # ==========================================
-# 2. ESTILO VISUAL (TUS MODIFICACIONES)
+# 2. ESTILO VISUAL
 # ==========================================
 
 estilo_css = """
@@ -282,12 +281,23 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 
 MODEL_NAME = "models/gemini-2.0-flash"
 
+# --- PROMPT ACTUALIZADO CON "PORTERO SEMÁNTICO" ---
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
-Tu tarea es analizar argumentos sobre IA basándote exclusivamente en la documentacion provista.
+
+TU PRIMERA MISIÓN ES UN FILTRO DE RELEVANCIA:
+Analiza si el input del usuario está relacionado con tecnología, inteligencia artificial, sociedad digital, futuro del trabajo o ética tecnológica.
+1. SI NO TIENE RELACIÓN (ej: jardinería, cocina, deportes, clima):
+   - Debes devolver el JSON con "Clasificacion": "FUERA DE TEMA".
+   - En "Desarticulacion" explica brevemente que solo analizas temas tecnológicos.
+   - Pon el resto de campos en "N/A" o 0.
+
+2. SI TIENE RELACIÓN:
+   - Procede con el análisis forense estándar basándote exclusivamente en la documentación provista.
+
 Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
 {
-  "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural)",
+  "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural) o FUERA DE TEMA",
   "Nivel_Alarmismo": (Número entero 0-100),
   "Punto_de_Dolor": "Texto breve identificando la emoción subyacente...",
   "Riesgo_Real": "Texto breve explicando el problema técnico real...",
@@ -426,103 +436,111 @@ if ejecutar:
             texto_limpio = response.text.replace("```json", "").replace("```", "").strip()
             data = json.loads(texto_limpio)
             
-            # 3. MÉTRICAS
+            # 3. EXTRAER CLASIFICACIÓN
+            clasificacion = data.get('Clasificacion', 'N/A')
             alarmismo = data.get('Nivel_Alarmismo', 0)
             
             # Limpiamos el loader
             loader_placeholder.empty()
-
+            
             st.divider()
 
-            # --- REPORTE ---
-            st.markdown("### 📊 Reporte de Análisis")
-            
-            if alarmismo < 30:
-                estado_texto = "BAJO (Racional)"
-            elif alarmismo < 70:
-                estado_texto = "MEDIO (Preocupante)"
-            else:
-                estado_texto = "CRÍTICO (Pánico)"
-
-            col_met1, col_met2, col_met3 = st.columns(3)
-            col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
-            col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
-            col_met3.metric("Perfil", data.get('Clasificacion', 'N/A'))
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            c1, c2 = st.columns(2)
-            with c1:
-                st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
-                st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
-            with c2:
-                st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
-
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # --- SECCIÓN DE EVIDENCIA MEJORADA ---
-            with st.expander("📚 VER EVIDENCIA DOCUMENTAL Y FUENTE", expanded=True):
-                st.markdown("#### Cita textual hallada:")
-                # Cita con alto contraste
-                st.markdown(f"<blockquote>{data.get('Cita')}</blockquote>", unsafe_allow_html=True)
+            # --- LÓGICA DE REPORTE ---
+            # Si el tema es IRRELEVANTE, mostramos aviso en vez de reporte completo
+            if clasificacion == "FUERA DE TEMA":
+                st.warning("🔕 **TEMA NO DETECTADO**")
+                st.info(f"El Motor Crítico ha detectado que este argumento no está relacionado con tecnología o IA.\n\n**Respuesta del sistema:** {data.get('Desarticulacion')}")
                 
+            else:
+                # REPORTE NORMAL (SÓLO SI ES TEMA VÁLIDO)
+                st.markdown("### 📊 Reporte de Análisis")
+                
+                if alarmismo < 30:
+                    estado_texto = "BAJO (Racional)"
+                elif alarmismo < 70:
+                    estado_texto = "MEDIO (Preocupante)"
+                else:
+                    estado_texto = "CRÍTICO (Pánico)"
+
+                col_met1, col_met2, col_met3 = st.columns(3)
+                col_met1.metric("Nivel de Alarmismo", f"{alarmismo}%", delta="Intensidad")
+                col_met2.metric("Clasificación", "Detectada", delta=estado_texto)
+                col_met3.metric("Perfil", clasificacion)
+
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.info(f"**😫 Punto de Dolor Detectado:**\n\n{data.get('Punto_de_Dolor')}")
+                    st.warning(f"**⚠️ Riesgo Técnico Real:**\n\n{data.get('Riesgo_Real')}")
+                with c2:
+                    st.success(f"**🧠 Desarticulación Lógica:**\n\n{data.get('Desarticulacion')}")
+
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # --- TARJETA DE IDENTIFICACIÓN DE FUENTE ---
-                autor_cita = data.get('Autor_Cita', 'Desconocido')
-                if autor_cita == "N/A" or autor_cita == "Desconocido":
-                    color_borde = "#94a3b8"
-                    icono_fuente = "🚫"
-                    titulo_fuente = "FUENTE NO DISPONIBLE"
-                else:
-                    color_borde = "#38bdf8" # Cyan
-                    icono_fuente = "📂"
-                    titulo_fuente = "DOCUMENTO FUENTE IDENTIFICADO"
+                # --- SECCIÓN DE EVIDENCIA ---
+                with st.expander("📚 VER EVIDENCIA DOCUMENTAL Y FUENTE", expanded=True):
+                    st.markdown("#### Cita textual hallada:")
+                    # Cita con alto contraste
+                    st.markdown(f"<blockquote>{data.get('Cita')}</blockquote>", unsafe_allow_html=True)
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # --- TARJETA DE IDENTIFICACIÓN DE FUENTE ---
+                    autor_cita = data.get('Autor_Cita', 'Desconocido')
+                    if autor_cita == "N/A" or autor_cita == "Desconocido":
+                        color_borde = "#94a3b8"
+                        icono_fuente = "🚫"
+                        titulo_fuente = "FUENTE NO DISPONIBLE"
+                    else:
+                        color_borde = "#38bdf8" # Cyan
+                        icono_fuente = "📂"
+                        titulo_fuente = "DOCUMENTO FUENTE IDENTIFICADO"
 
-                # HTML Puro para dibujar la caja tipo "Tarjeta de Crédito"
-                st.markdown(f"""
-                <div style='
-                    background-color: #020617; 
-                    padding: 20px; 
-                    border-radius: 10px; 
-                    border: 2px solid {color_borde}; 
-                    display: flex; 
-                    align-items: center; 
-                    gap: 20px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-                '>
+                    # HTML Puro para dibujar la caja
+                    st.markdown(f"""
                     <div style='
-                        font-size: 3rem; 
-                        background: rgba(255,255,255,0.05); 
-                        padding: 10px; 
-                        border-radius: 50%;
-                        width: 80px;
-                        height: 80px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
+                        background-color: #020617; 
+                        padding: 20px; 
+                        border-radius: 10px; 
+                        border: 2px solid {color_borde}; 
+                        display: flex; 
+                        align-items: center; 
+                        gap: 20px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
                     '>
-                        {icono_fuente}
-                    </div>
-                    <div>
                         <div style='
-                            color: {color_borde}; 
-                            font-size: 0.8rem; 
-                            font-weight: 800; 
-                            letter-spacing: 2px; 
-                            text-transform: uppercase;
-                            margin-bottom: 5px;
-                        '>{titulo_fuente}</div>
-                        <div style='
-                            color: #ffffff; 
-                            font-size: 1.3rem; 
-                            font-weight: 700; 
-                            font-family: monospace;
-                            word-break: break-all;
-                        '>{autor_cita}</div>
+                            font-size: 3rem; 
+                            background: rgba(255,255,255,0.05); 
+                            padding: 10px; 
+                            border-radius: 50%;
+                            width: 80px;
+                            height: 80px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        '>
+                            {icono_fuente}
+                        </div>
+                        <div>
+                            <div style='
+                                color: {color_borde}; 
+                                font-size: 0.8rem; 
+                                font-weight: 800; 
+                                letter-spacing: 2px; 
+                                text-transform: uppercase;
+                                margin-bottom: 5px;
+                            '>{titulo_fuente}</div>
+                            <div style='
+                                color: #ffffff; 
+                                font-size: 1.3rem; 
+                                font-weight: 700; 
+                                font-family: monospace;
+                                word-break: break-all;
+                            '>{autor_cita}</div>
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
         except Exception as e:
             loader_placeholder.empty()
