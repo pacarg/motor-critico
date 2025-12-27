@@ -10,7 +10,7 @@ import time
 # ==========================================
 
 st.set_page_config(
-    page_title="Motor Crítico | Forense", 
+    page_title="Análisis Crítico | Forense", 
     layout="wide", 
     page_icon="🛡️",
     initial_sidebar_state="expanded"
@@ -283,7 +283,7 @@ with st.sidebar:
 
 col_h1, col_h2 = st.columns([1, 10])
 with col_h2:
-    st.title("Motor Crítico")
+    st.title("Análisis Crítico")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
