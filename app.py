@@ -199,11 +199,10 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# SOLUCIÓN DEFINITIVA: 
-# Usamos "Gemini 1.5 Flash". Es la versión ESTABLE.
-# - Tiene 1,500 peticiones diarias gratis (vs 20 de la versión 2.5).
-# - Es inmune a los bloqueos de la versión experimental 2.0.
-MODEL_NAME = "models/gemini-1.5-flash"
+# ELEGIDO DE TU LISTA VERDE:
+# Usamos la Serie 2.0 Flash. 
+# Al ser usuario de pago, el bloqueo anterior debería haber desaparecido.
+MODEL_NAME = "models/gemini-2.0-flash"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
