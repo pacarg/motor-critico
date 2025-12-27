@@ -200,7 +200,7 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # ==========================================
 
 # Usamos Gemini 2.0 Flash para evitar límites de cuota
-MODEL_NAME = "models/gemini-2.0-flash-exp"
+MODEL_NAME = "models/gemini-exp-1206"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
