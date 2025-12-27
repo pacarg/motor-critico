@@ -306,7 +306,7 @@ st.markdown("---")
 
 # INPUT USUARIO
 if modo == "✍️ Escribir crítica":
-    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento... (Fondo claro activo)")
+    input_usuario = st.text_area("Introduce el argumento a analizar:", height=150, placeholder="Escribe aquí el argumento...")
 else:
     input_usuario = st.selectbox("Selecciona un caso típico para analizar:", [
         "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
