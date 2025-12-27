@@ -199,11 +199,11 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 5. CONFIGURACIÓN DEL MODELO IA
 # ==========================================
 
-# CORRECCIÓN CRÍTICA:
-# Usamos la versión "Lite" explícita.
-# Evitamos 'latest' (que te lleva al 2.5 con solo 20 req/día)
-# Evitamos 'exp' (que tiene cuota 0 en free tier)
-MODEL_NAME = "models/gemini-2.0-flash-lite-preview-02-05"
+# SOLUCIÓN DEFINITIVA: 
+# Usamos "Gemini 1.5 Flash". Es la versión ESTABLE.
+# - Tiene 1,500 peticiones diarias gratis (vs 20 de la versión 2.5).
+# - Es inmune a los bloqueos de la versión experimental 2.0.
+MODEL_NAME = "models/gemini-1.5-flash"
 
 PROMPT_BASE = """
 Eres el "Motor de Desarticulación Lógica".
@@ -241,6 +241,7 @@ model = genai.GenerativeModel(
     generation_config=generation_config,
     system_instruction=SYSTEM_INSTRUCTION
 )
+
 # ==========================================
 # 6. INTERFAZ VISUAL
 # ==========================================
