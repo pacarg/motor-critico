@@ -99,7 +99,7 @@ TRADUCCIONES = {
         "riesgo_real": "Real Technical Risk:",
         "desarticulacion": "Logical Deconstruction:",
         "evidencia_titulo": "📚 VIEW DOCUMENTARY EVIDENCE AND SOURCE",
-        "cita_titulo": "Textual citation found:",
+        "cita_titulo": "Textual citation found (Translated if source is non-English):",
         "fuente_no_disponible": "SOURCE NOT AVAILABLE",
         "fuente_identificada": "SOURCE DOCUMENT IDENTIFIED",
         "fuera_tema_titulo": "🔕 TOPIC NOT DETECTED",
@@ -115,7 +115,7 @@ TRADUCCIONES = {
         "modo_op_2": "📂 Strategic Cases",
         "info_sidebar": "ℹ️ The **Alarmism Level** measures the semantic distance between the emotional narrative and technical reality.",
         
-        # PROMPT EN INGLÉS (CLAVE PARA QUE LA RESPUESTA SEA PURA EN INGLÉS)
+        # --- PROMPT CORREGIDO PARA FORZAR TRADUCCIÓN DE CITAS ---
         "system_prompt": """
         You are the "Logical Deconstruction Engine".
         
@@ -137,7 +137,7 @@ TRADUCCIONES = {
           "Punto_de_Dolor": "Brief text identifying the underlying emotion...",
           "Riesgo_Real": "Brief text explaining the real technical problem...",
           "Desarticulacion": "Brief text with the logical and philosophical argument...",
-          "Cita": "Brief textual citation extracted from the documents...",
+          "Cita": "Brief textual citation extracted from the documents. IMPORTANT: IF THE ORIGINAL SOURCE DOCUMENT IS IN SPANISH, YOU MUST TRANSLATE THE QUOTE TO ENGLISH.",
           "Autor_Cita": "EXACT Name of the PDF file from which you extracted the citation. If no citation, put 'N/A'."
         }
         """
