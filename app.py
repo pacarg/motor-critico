@@ -6,9 +6,8 @@ import pypdf
 import time
 
 # ==========================================
-# 0. DICCIONARIO DE TRADUCCIONES (i18n)
+# 0. DICCIONARIO DE TRADUCCIONES (i18n) + PROMPTS
 # ==========================================
-# Aquí definimos todos los textos de la interfaz en ambos idiomas.
 
 TRADUCCIONES = {
     "ES": {
@@ -39,7 +38,6 @@ TRADUCCIONES = {
         "fuente_identificada": "DOCUMENTO FUENTE IDENTIFICADO",
         "fuera_tema_titulo": "🔕 TEMA NO DETECTADO",
         "fuera_tema_desc": "El Motor Crítico ha detectado que este argumento no está relacionado con tecnología o IA.",
-        "prompt_lang_instruction": "Responde SIEMPRE en ESPAÑOL (Spanish).",
         "casos_ejemplo": [
             "La IA es una caja negra que tomará decisiones de vida o muerte sin que sepamos por qué.",
             "La IA roba el alma de los artistas al copiar sus estilos y anula la creatividad humana.",
@@ -49,7 +47,34 @@ TRADUCCIONES = {
         ],
         "modo_op_1": "✍️ Escribir crítica",
         "modo_op_2": "📂 Casos Estratégicos",
-        "info_sidebar": "ℹ️ El **Nivel de Alarmismo** mide la distancia semántica entre la narrativa emocional y la realidad técnica."
+        "info_sidebar": "ℹ️ El **Nivel de Alarmismo** mide la distancia semántica entre la narrativa emocional y la realidad técnica.",
+        
+        # PROMPT EN ESPAÑOL
+        "system_prompt": """
+        Eres el "Motor de Desarticulación Lógica".
+        
+        TU PRIMERA MISIÓN ES UN FILTRO DE RELEVANCIA:
+        Analiza si el input del usuario está relacionado con tecnología, inteligencia artificial, sociedad digital, futuro del trabajo o ética tecnológica.
+        1. SI NO TIENE RELACIÓN:
+           - Debes devolver el JSON con "Clasificacion": "FUERA DE TEMA".
+           - En "Desarticulacion" explica brevemente en ESPAÑOL que solo analizas temas tecnológicos.
+           - Pon el resto de campos en "N/A" o 0.
+
+        2. SI TIENE RELACIÓN:
+           - Procede con el análisis forense estándar basándote exclusivamente en la documentación provista.
+           - RESPONDE SIEMPRE EN ESPAÑOL.
+
+        Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
+        {
+          "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural) o FUERA DE TEMA",
+          "Nivel_Alarmismo": (Número entero 0-100),
+          "Punto_de_Dolor": "Texto breve identificando la emoción subyacente...",
+          "Riesgo_Real": "Texto breve explicando el problema técnico real...",
+          "Desarticulacion": "Texto breve con el argumento lógico y filosófico...",
+          "Cita": "Cita textual breve extraída de los documentos...",
+          "Autor_Cita": "Nombre EXACTO del archivo PDF del que extrajiste la cita. Si no hay cita, pon 'N/A'."
+        }
+        """
     },
     "EN": {
         "titulo_app": "Critical Analysis",
@@ -79,7 +104,6 @@ TRADUCCIONES = {
         "fuente_identificada": "SOURCE DOCUMENT IDENTIFIED",
         "fuera_tema_titulo": "🔕 TOPIC NOT DETECTED",
         "fuera_tema_desc": "The Critical Engine has detected that this argument is unrelated to technology or AI.",
-        "prompt_lang_instruction": "Respond ALWAYS in ENGLISH.",
         "casos_ejemplo": [
             "AI is a black box that will make life-or-death decisions without us knowing why.",
             "AI steals the soul of artists by copying their styles and nullifies human creativity.",
@@ -89,7 +113,34 @@ TRADUCCIONES = {
         ],
         "modo_op_1": "✍️ Write Critique",
         "modo_op_2": "📂 Strategic Cases",
-        "info_sidebar": "ℹ️ The **Alarmism Level** measures the semantic distance between the emotional narrative and technical reality."
+        "info_sidebar": "ℹ️ The **Alarmism Level** measures the semantic distance between the emotional narrative and technical reality.",
+        
+        # PROMPT EN INGLÉS (CLAVE PARA QUE LA RESPUESTA SEA PURA EN INGLÉS)
+        "system_prompt": """
+        You are the "Logical Deconstruction Engine".
+        
+        YOUR FIRST MISSION IS A RELEVANCE FILTER:
+        Analyze if the user input is related to technology, artificial intelligence, digital society, future of work, or tech ethics.
+        1. IF IT IS NOT RELATED:
+           - You must return the JSON with "Clasificacion": "FUERA DE TEMA".
+           - In "Desarticulacion" briefly explain in ENGLISH that you only analyze technological topics.
+           - Set other fields to "N/A" or 0.
+
+        2. IF IT IS RELATED:
+           - Proceed with the standard forensic analysis based exclusively on the provided documentation.
+           - RESPOND ALWAYS IN ENGLISH.
+
+        You must ALWAYS respond with this exact JSON schema (no extra markdown):
+        {
+          "Clasificacion": "GROUP A (Technical) or GROUP B (Cultural) or FUERA DE TEMA",
+          "Nivel_Alarmismo": (Integer 0-100),
+          "Punto_de_Dolor": "Brief text identifying the underlying emotion...",
+          "Riesgo_Real": "Brief text explaining the real technical problem...",
+          "Desarticulacion": "Brief text with the logical and philosophical argument...",
+          "Cita": "Brief textual citation extracted from the documents...",
+          "Autor_Cita": "EXACT Name of the PDF file from which you extracted the citation. If no citation, put 'N/A'."
+        }
+        """
     }
 }
 
@@ -216,7 +267,6 @@ BIBLIOTECA_CONOCIMIENTO, LISTA_ARCHIVOS = cargar_biblioteca_desde_pdfs()
 # 5. LÓGICA DE IDIOMA E INTERFAZ
 # ==========================================
 
-# SELECTOR DE IDIOMA EN SIDEBAR
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_column_width=True)
@@ -227,11 +277,11 @@ with st.sidebar:
     # --- SELECTOR DE IDIOMA ---
     idioma_seleccionado = st.radio("Language / Idioma:", ["Español", "English"])
     LANG_CODE = "ES" if idioma_seleccionado == "Español" else "EN"
-    TXT = TRADUCCIONES[LANG_CODE] # Cargamos los textos correspondientes
+    TXT = TRADUCCIONES[LANG_CODE] 
 
     st.markdown("### 🎛️ Panel de Control")
     
-    # WIDGET LED (Igual que antes)
+    # WIDGET LED 
     num_fuentes = len(LISTA_ARCHIVOS)
     color_led = "#4ade80" if num_fuentes > 0 else "#f87171"
     texto_estado = "ONLINE" if num_fuentes > 0 else "OFFLINE"
@@ -257,45 +307,23 @@ with st.sidebar:
     modo = st.radio("Modo:", [TXT["modo_op_1"], TXT["modo_op_2"]])
     st.markdown("---")
     st.info(TXT["info_sidebar"])
+    
+    # FAQ DESCARGABLE
+    texto_faq = """
+    (AQUÍ PEGARÍAS EL TEXTO DEL FAQ QUE TE PASÉ ANTES SI QUIERES, O DÉJALO VACÍO)
+    """
+    # st.download_button(label="📄 FAQ", data=texto_faq, file_name="FAQ.txt")
 
 # ==========================================
-# 6. CONFIGURACIÓN DEL MODELO IA (DINÁMICO)
+# 6. CONFIGURACIÓN DEL MODELO IA (PROMPT DINÁMICO)
 # ==========================================
 
 MODEL_NAME = "models/gemini-2.0-flash"
 
-# INYECTAMOS LA INSTRUCCIÓN DE IDIOMA EN EL PROMPT
-PROMPT_BASE = f"""
-Eres el "Motor de Desarticulación Lógica".
-
-INSTRUCCIÓN DE IDIOMA OBLIGATORIA:
-{TXT['prompt_lang_instruction']}
-
-TU PRIMERA MISIÓN ES UN FILTRO DE RELEVANCIA:
-Analiza si el input del usuario está relacionado con tecnología, inteligencia artificial, sociedad digital, futuro del trabajo o ética tecnológica.
-1. SI NO TIENE RELACIÓN:
-   - Debes devolver el JSON con "Clasificacion": "FUERA DE TEMA".
-   - En "Desarticulacion" explica brevemente (EN EL IDIOMA SOLICITADO) que solo analizas temas tecnológicos.
-   - Pon el resto de campos en "N/A" o 0.
-
-2. SI TIENE RELACIÓN:
-   - Procede con el análisis forense estándar basándote exclusivamente en la documentación provista.
-   - REDACTA TODOS LOS CAMPOS DE TEXTO DEL JSON EN EL IDIOMA SOLICITADO ({LANG_CODE}).
-
-Debes responder SIEMPRE con este esquema JSON exacto (sin markdown extra):
-{{
-  "Clasificacion": "GRUPO A (Técnico) o GRUPO B (Cultural) o FUERA DE TEMA",
-  "Nivel_Alarmismo": (Número entero 0-100),
-  "Punto_de_Dolor": "Texto breve...",
-  "Riesgo_Real": "Texto breve...",
-  "Desarticulacion": "Texto breve...",
-  "Cita": "Cita textual breve extraída de los documentos...",
-  "Autor_Cita": "Nombre EXACTO del archivo PDF. Si no hay cita, pon 'N/A'."
-}}
-"""
-
+# AQUÍ ESTÁ EL CAMBIO CLAVE:
+# Cargamos el Prompt ENTERO desde el diccionario, según el idioma.
 SYSTEM_INSTRUCTION = f"""
-{PROMPT_BASE}
+{TXT['system_prompt']}
 
 LISTA DE FUENTES:
 {LISTA_ARCHIVOS}
@@ -385,8 +413,6 @@ if ejecutar:
             else:
                 st.markdown(f"### {TXT['reporte_titulo']}")
                 
-                # Estados de texto adaptados al idioma no son fáciles de predecir en JSON numérico, 
-                # así que los generamos aquí visualmente:
                 if alarmismo < 30:
                     estado_texto = "LOW/BAJO"
                 elif alarmismo < 70:
